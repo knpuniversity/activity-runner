@@ -1,6 +1,8 @@
 KnpUniversity Activity Runner
 =============================
 
+[![Build Status](https://travis-ci.org/knpuniversity/activity-runner.png)](https://travis-ci.org/knpuniversity/activity-runner)
+
 ## Usage
 
 You can evaluate activities straight from the command line by running the
