@@ -63,9 +63,10 @@ EOD;
     public function aboveNormalVerbosityProvider()
     {
         return array(
-            array(OutputInterface::VERBOSITY_VERBOSE),
-            array(OutputInterface::VERBOSITY_VERY_VERBOSE),
-            array(OutputInterface::VERBOSITY_DEBUG),
+            array(2), // OutputInterface::VERBOSITY_VERBOSE
+            array(3), // OutputInterface::VERBOSITY_VERY_VERBOSE
+            array(100),
+            array(1000),
         );
     }
 }

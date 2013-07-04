@@ -122,8 +122,8 @@ class Result
      */
     public function setVerbosity($verbosity)
     {
-        if (OutputInterface::VERBOSITY_QUIET > $verbosity || $verbosity > OutputInterface::VERBOSITY_DEBUG) {
-            throw new \InvalidArgumentException(sprintf("Got unknown verbosity level %s, expected it to be between %s and %s.", $verbosity, OutputInterface::VERBOSITY_QUIET, OutputInterface::VERBOSITY_DEBUG));
+        if (OutputInterface::VERBOSITY_QUIET > $verbosity) {
+            throw new \InvalidArgumentException(sprintf("Got unknown verbosity level %s, expected it to be more than %d.", $verbosity, OutputInterface::VERBOSITY_QUIET));
         }
 
         $this->verbosity = $verbosity;
