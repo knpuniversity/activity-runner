@@ -1,0 +1,8 @@
+# This metadata serves 2 purposes:
+#  -  testing;
+#  -  documentation;
+test_activity:
+    question: "what is the answer to life, the universe and everything?"
+    skeletons: [skeleton.html.twig]
+    context: context.php
+    asserts: TestAssertSuite.php

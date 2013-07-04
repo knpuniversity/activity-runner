@@ -1,0 +1,29 @@
+{
+    "name": "knpuniversity/activity-runner",
+    "type": "library",
+    "description": "Executes Twig & PHP activities in a safe manner",
+    "licence": "MIT",
+    "authors": [
+        {
+            "name": "Kristen Gilden",
+            "email": "kristen.gilden@knplabs.com"
+        }
+    ],
+    "require": {
+        "doctrine/collections": "~1.1",
+        "phpunit/phpunit": "~3.7.21",
+        "symfony/console": "~2.2",
+        "symfony/config": "~2.2",
+        "symfony/css-selector": "~2.2",
+        "symfony/dom-crawler": "~2.2",
+        "symfony/process": "~2.2",
+        "symfony/yaml": "~2.2",
+        "twig/twig": "~1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "KnpU\\ActivityRunner": "src",
+            "KnpU\\ActibityRunner\\Tests": "tests"
+        }
+    }
+}
