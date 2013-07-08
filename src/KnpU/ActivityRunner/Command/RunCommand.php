@@ -3,30 +3,33 @@
 namespace KnpU\ActivityRunner\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use KnpU\ActivityRunner\Assert\Asserter;
-use KnpU\ActivityRunner\Assert\ClassLoader;
-use KnpU\ActivityRunner\Configuration\ActivityConfigBuilder;
-use KnpU\ActivityRunner\Configuration\ActivityConfiguration;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
-use KnpU\ActivityRunner\Exception\InvalidActivityException;
-use KnpU\ActivityRunner\Worker\PhpWorker;
-use KnpU\ActivityRunner\Worker\TwigWorker;
-use KnpU\ActivityRunner\Worker\WorkerBag;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use KnpU\ActivityRunner\Factory\ActivityFactory;
-use Symfony\Component\Config\Definition\Processor;
-use Symfony\Component\Yaml\Yaml;
-use KnpU\ActivityRunner\Worker\ChainedWorker;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com
  */
 class RunCommand extends Command
 {
+    /**
+     * @var \KnpU\ActivityRunner\Assert\Asserter
+     */
+    protected $asserter;
+
+    /**
+     * @var \KnpU\ActivityRunner\Factory\ActivityFactory
+     */
+    protected $factory;
+
+    /**
+     * @var \KnpU\ActivityRunner\Worker\WorkerInterface
+     */
+    protected $worker;
+
     /**
      * {@inheritDoc}
      */
@@ -88,42 +91,53 @@ EOD
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        foreach (array('config') as $option) {
-            if (null === $input->getOption($option)) {
-                throw new \RuntimeException(sprintf('The "%s" option must be provided.', $option));
-            }
-        }
-
         $activityName = $input->getArgument('activity');
-        $configPath   = $input->getOption('config');
+        $inputFiles   = $this->getInputFiles($input);
 
-        $config = $this->getConfig($configPath);
+        $activity = $this->factory->createActivity($activityName, $inputFiles);
+        $result   = $this->worker->render($activity);
 
-        $activityFactory = new ActivityFactory(new ClassLoader());
-        $activityFactory->setConfig($config);
-
-        $inputFiles = $this->getInputFiles($input);
-        $activity   = $activityFactory->createActivity($activityName, $inputFiles);
-
-        $worker = $this->createWorkerBag()->get($config[$activityName]['worker']);
-
-        $result = $worker->render($activity);
         $result->setVerbosity($output->getVerbosity());
         $result->setFormat($input->getOption('output-format') ?: 'yaml');
 
         // only validate if we're at least somewhat valid
         if ($result->isValid()) {
             // Verify the output.
-            $asserter = new Asserter();
-
-            if (!$asserter->isValid($result, $activity)) {
+            if (!$this->asserter->isValid($result, $activity)) {
                 $result->setValidationErrors(
-                    $asserter->getValidationErrors($result, $activity)
+                    $this->asserter->getValidationErrors($result, $activity)
                 );
             }
         }
 
         $output->write((string) $result);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize(InputInterface $input, OutputInterface $output)
+    {
+        foreach (array('config') as $option) {
+            if (null === $input->getOption($option)) {
+                throw new \RuntimeException(sprintf('The "%s" option must be provided.', $option));
+            }
+        }
+
+        $container = require(__DIR__.'/../../../../app/config/services.php');
+
+        $activityName = $input->getArgument('activity');
+        $config = $container['config_builder']->build($input->getOption('config'));
+
+        // Factory for creating new activities.
+        $this->factory = $container['activity_factory'];
+        $this->factory->setConfig($config);
+
+        // Executes activities.
+        $this->worker = $container['worker_bag']->get($config[$activityName]['worker']);
+
+        // Verifies the result.
+        $this->asserter = $container['asserter'];
     }
 
     /**
@@ -206,35 +220,5 @@ EOD
         }
 
         return $userInput;
-    }
-
-    /**
-     * Retrieves the config from the specfied file and sanitizes it.
-     *
-     * @param string $configPath
-     *
-     * @return array  The sanitized config settings
-     */
-    private function getConfig($configPath)
-    {
-        $builder = new ActivityConfigBuilder(
-            new Processor(),
-            new ActivityConfiguration(),
-            new Yaml()
-        );
-
-        return $builder->build($configPath);
-    }
-
-    /**
-     * @return WorkerBag
-     */
-    private function createWorkerBag()
-    {
-        $twig = new TwigWorker();
-        $php  = new PhpWorker();
-        $chained = new ChainedWorker(array($twig, $php));
-
-        return new WorkerBag(array($twig, $php, $chained));
     }
 }
