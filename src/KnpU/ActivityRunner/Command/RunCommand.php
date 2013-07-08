@@ -16,19 +16,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class RunCommand extends Command
 {
     /**
-     * @var \KnpU\ActivityRunner\Assert\Asserter
+     * @var \KnpU\ActivityRunner\ActivityRunner
      */
-    protected $asserter;
-
-    /**
-     * @var \KnpU\ActivityRunner\Factory\ActivityFactory
-     */
-    protected $factory;
-
-    /**
-     * @var \KnpU\ActivityRunner\Worker\WorkerInterface
-     */
-    protected $worker;
+    protected $activityRunner;
 
     /**
      * {@inheritDoc}
@@ -91,24 +81,19 @@ EOD
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $activityName = $input->getArgument('activity');
-        $inputFiles   = $this->getInputFiles($input);
-
-        $activity = $this->factory->createActivity($activityName, $inputFiles);
-        $result   = $this->worker->render($activity);
-
-        $result->setVerbosity($output->getVerbosity());
-        $result->setFormat($input->getOption('output-format') ?: 'yaml');
-
-        // only validate if we're at least somewhat valid
-        if ($result->isValid()) {
-            // Verify the output.
-            if (!$this->asserter->isValid($result, $activity)) {
-                $result->setValidationErrors(
-                    $this->asserter->getValidationErrors($result, $activity)
-                );
+        if (null === $input->getOption('config')) {
+            if (null === $input->getOption($option)) {
+                throw new \RuntimeException('The "config" option must be provided.');
             }
         }
+
+        $activityName = $input->getArgument('activity');
+        $configPath   = $input->getOption('config');
+        $inputFiles   = $this->getInputFiles($input);
+
+        $result = $this->activityRunner->run($activityName, $configPath, $inputFiles);
+        $result->setVerbosity($output->getVerbosity());
+        $result->setFormat($input->getOption('output-format') ?: 'yaml');
 
         $output->write((string) $result);
     }
@@ -118,26 +103,9 @@ EOD
      */
     public function initialize(InputInterface $input, OutputInterface $output)
     {
-        foreach (array('config') as $option) {
-            if (null === $input->getOption($option)) {
-                throw new \RuntimeException(sprintf('The "%s" option must be provided.', $option));
-            }
-        }
-
         $container = require(__DIR__.'/../../../../app/config/services.php');
 
-        $activityName = $input->getArgument('activity');
-        $config = $container['config_builder']->build($input->getOption('config'));
-
-        // Factory for creating new activities.
-        $this->factory = $container['activity_factory'];
-        $this->factory->setConfig($config);
-
-        // Executes activities.
-        $this->worker = $container['worker_bag']->get($config[$activityName]['worker']);
-
-        // Verifies the result.
-        $this->asserter = $container['asserter'];
+        $this->activityRunner = $container['activity_runner'];
     }
 
     /**

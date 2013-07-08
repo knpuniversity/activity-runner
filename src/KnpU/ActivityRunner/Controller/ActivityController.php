@@ -22,29 +22,10 @@ class ActivityController
         $configPath   = $request->request->get('config');
         $inputFiles   = new ArrayCollection($request->request->get('file'));
 
-        $config  = $app['config_builder']->build($configPath);
-        $factory = $app['activity_factory'];
-        $factory->setConfig($config);
+        $activityRunner = $app['activity_runner'];
 
-        $activity = $factory->createActivity($activityName, $inputFiles);
-
-        $worker = $app['worker_bag']->get($config[$activityName]['worker']);
-
-        $result = $worker->render($activity);
-
-        // Only validates, if we're at least somewhat valid.
-        if ($result->isValid()) {
-            $asserter = $app['asserter'];
-
-            // Verify the output.
-            if (!$asserter->isValid($result, $activity)) {
-                $errors = $asserter->getValidationErrors($result, $activity);
-
-                $result->setValidationErrors($errors);
-            }
-        }
-
-        $result->setFormat('json');
+        $result = $activityRunner->run($activityName, $configPath, $inputFiles);
+        $result->setFormat($request->request->get('output-format', 'yaml'));
 
         return (string) $result;
     }

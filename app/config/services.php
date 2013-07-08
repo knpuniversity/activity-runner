@@ -18,6 +18,15 @@ $app['activity_factory'] = function ($app) {
     );
 };
 
+$app['activity_runner'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\ActivityRunner(
+        $app['asserter'],
+        $app['config_builder'],
+        $app['activity_factory'],
+        $app['worker_bag']
+    );
+});
+
 $app['asserter'] = $app->share(function () {
     return new KnpU\ActivityRunner\Assert\Asserter();
 });
