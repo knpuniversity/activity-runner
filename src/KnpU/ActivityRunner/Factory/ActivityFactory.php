@@ -29,17 +29,24 @@ class ActivityFactory
     /**
      * @see \KnpU\ActivityRunner\Configuration\ActivityConfiguration
      *
-     * @param array $config  Configuration for creating activities
+     * @param ClassLoader $classLoader
      *
      * @throws NoActivitiesDefinedException if the config array is empty
      */
-    public function __construct(array $config)
+    public function __construct(ClassLoader $classLoader)
+    {
+        $this->classLoader = $classLoader;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig(array $config)
     {
         if (0 === count($config)) {
             throw new NoActivitiesDefinedException();
         }
 
-        $this->classLoader = new ClassLoader();
         $this->config = $config;
     }
 

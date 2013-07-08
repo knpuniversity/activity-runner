@@ -4,6 +4,7 @@ namespace KnpU\ActivityRunner\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Assert\Asserter;
+use KnpU\ActivityRunner\Assert\ClassLoader;
 use KnpU\ActivityRunner\Configuration\ActivityConfigBuilder;
 use KnpU\ActivityRunner\Configuration\ActivityConfiguration;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
@@ -98,7 +99,8 @@ EOD
 
         $config = $this->getConfig($configPath);
 
-        $activityFactory = new ActivityFactory($config);
+        $activityFactory = new ActivityFactory(new ClassLoader());
+        $activityFactory->setConfig($config);
 
         $inputFiles = $this->getInputFiles($input);
         $activity   = $activityFactory->createActivity($activityName, $inputFiles);

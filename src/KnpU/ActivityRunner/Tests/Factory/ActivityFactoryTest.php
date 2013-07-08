@@ -13,9 +13,10 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
     /**
      * @expectedException KnpU\ActivityRunner\Exception\NoActivitiesDefinedException
      */
-    public function testFactoryCreationFailsIfConfigIsEmpty()
+    public function testSetConfigFailsIfConfigIsEmpty()
     {
-        $factory = new ActivityFactory(array());
+        $factory = new ActivityFactory($this->getMockClassLoader());
+        $factory->setConfig(array());
     }
 
     /**
@@ -23,9 +24,8 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateActivityFailsIfNameNotDefined()
     {
-        $factory = new ActivityFactory(array(
-            'dummy' => array()
-        ));
+        $factory = new ActivityFactory($this->getMockClassLoader());
+        $factory->setConfig(array('dummy' => array()));
 
         $factory->createActivity('missing', new ArrayCollection(array(
             'foo.html.twig' => 'user input',
@@ -34,7 +34,8 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testNewActivityCreation()
     {
-        $factory = new ActivityFactory(array(
+        $factory = new ActivityFactory($this->getMockClassLoader());
+        $factory->setConfig(array(
             'activity_a' => array(
                 'question'    => 'What is the answer to life the universe and everything?',
                 'worker'      => 'twig',
@@ -48,5 +49,10 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('KnpU\\ActivityRunner\\Activity', $factory->createActivity('activity_a', new ArrayCollection(
             array('user input')
         )));
+    }
+
+    public function getMockClassLoader()
+    {
+        return $this->getMock('KnpU\\ActivityRunner\\Assert\\ClassLoader');
     }
 }
