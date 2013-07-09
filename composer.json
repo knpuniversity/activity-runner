@@ -25,7 +25,7 @@
     "autoload": {
         "psr-0": {
             "KnpU\\ActivityRunner": "src",
-            "KnpU\\ActibityRunner\\Tests": "tests"
+            "KnpU\\ActivityRunner\\Tests": "tests"
         }
     }
 }
