@@ -45,8 +45,8 @@ class TwigErrorHandlerTest extends \PHPUnit_Framework_TestCase
 
         // Should trigger an array to string conversion error, but since we're
         // using the twig error handler, an exception should be thrown instead.
-        $array  = array();
-        $string = (string) $array;
+        $date = new \DateTime();
+        $string = (string) $date;
     }
 
     /**

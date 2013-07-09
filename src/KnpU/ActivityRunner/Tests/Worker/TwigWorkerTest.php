@@ -34,10 +34,10 @@ class TwigWorkerTest extends \PHPUnit_Framework_TestCase
     public function testWorkerSetsLanguageErrorIfUnknownError()
     {
         $templates = new ArrayCollection(array(
-            'test.html.twig' => 'Hello, {{ array }}',
+            'test.html.twig' => 'Hello, {{ postedAt }}',
         ));
 
-        $activity = $this->getMockActivity($templates, 'test.html.twig', array('array' => array()));
+        $activity = $this->getMockActivity($templates, 'test.html.twig', array('postedAt' => new \DateTime()));
 
         $worker = new TwigWorker();
         $result = $worker->render($activity);
