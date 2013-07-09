@@ -5,6 +5,8 @@ namespace KnpU\ActivityRunner\Worker;
 use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 use KnpU\ActivityRunner\Assert\TwigAwareInterface;
+use KnpU\ActivityRunner\ErrorHandler\TwigErrorHandler;
+use KnpU\ActivityRunner\Exception\TwigException;
 use KnpU\ActivityRunner\Worker\WorkerInterface;
 use KnpU\ActivityRunner\Result;
 
@@ -48,10 +50,25 @@ class TwigWorker implements WorkerInterface
         $result = new Result();
         $result->setInputFiles($inputFiles);
 
+        $errorHandler = TwigErrorHandler::register();
+
         try {
             $output = $this->twig->render($entryPoint, $context);
             $result->setOutput($output);
+
+            $errorHandler->restore();
+        } catch (\Twig_Error $error) {
+            $errorHandler->restore();
+
+            if (($previous = $error->getPrevious()) && $previous instanceof TwigException) {
+                // Treat TwigException errors as validation errors.
+                $result->setValidationErrors(array($error->getMessage()));
+            } else {
+                $result->setLanguageError($error->getMessage());
+            }
         } catch (\Exception $error) {
+            $errorHandler->restore();
+
             $result->setLanguageError($error->getMessage());
         }
 

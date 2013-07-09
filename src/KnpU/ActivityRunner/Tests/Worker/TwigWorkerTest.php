@@ -26,6 +26,26 @@ class TwigWorkerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello, world!', $result->getOutput());
     }
 
+    /**
+     * Even though the success of this test depends on `TwigErrorHandler`
+     * being correct, we can somewhat test the behaviour of what happens, if
+     * a PHP error occurrs inside the worker during the rendering phase.
+     */
+    public function testWorkerSetsLanguageErrorIfUnknownError()
+    {
+        $templates = new ArrayCollection(array(
+            'test.html.twig' => 'Hello, {{ array }}',
+        ));
+
+        $activity = $this->getMockActivity($templates, 'test.html.twig', array('array' => array()));
+
+        $worker = new TwigWorker();
+        $result = $worker->render($activity);
+
+        $result = $result->toArray();
+        $this->assertCount(1, $result['errors']['validation']);
+    }
+
     public function testSupportsReturnsTrueIfNotTwig()
     {
         $worker = new TwigWorker();
