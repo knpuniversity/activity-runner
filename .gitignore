@@ -1,2 +1,4 @@
 /vendor
 phpunit.xml
+/app/config/parameters.php
+/app/courses

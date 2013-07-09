@@ -65,6 +65,8 @@ format:
 
 All paths can either be absolute or relative. Relative paths are translated to
 absolute paths as if the current directory was the configuration file location.
+You can also simply specify a directory. The command will then recursively try
+to find all files named `activities.yml`.
 
 The <comment>context</comment> parameter must point to a PHP script that returns an array of
 context elements - the parameters passed down to twig templates.
@@ -81,17 +83,10 @@ EOD
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        if (null === $input->getOption('config')) {
-            if (null === $input->getOption($option)) {
-                throw new \RuntimeException('The "config" option must be provided.');
-            }
-        }
-
         $activityName = $input->getArgument('activity');
-        $configPath   = $input->getOption('config');
         $inputFiles   = $this->getInputFiles($input);
 
-        $result = $this->activityRunner->run($activityName, $configPath, $inputFiles);
+        $result = $this->activityRunner->run($activityName, $inputFiles);
         $result->setVerbosity($output->getVerbosity());
         $result->setFormat($input->getOption('output-format') ?: 'yaml');
 
@@ -103,9 +98,21 @@ EOD
      */
     public function initialize(InputInterface $input, OutputInterface $output)
     {
-        $container = require(__DIR__.'/../../../../app/config/services.php');
+        $app = require(__DIR__.'/../../../../app/config/services.php');
 
-        $this->activityRunner = $container['activity_runner'];
+        if (is_file($paramFile = __DIR__.'/../../../../app/config/parameters.php')) {
+            $app = require($paramFile);
+        } else {
+            $app = require($paramFile.'.dist');
+        }
+
+        $activityRunner = $app['activity_runner'];
+
+        if ($input->hasOption('config')) {
+            $activityRunner->setConfigPaths($input->getOption('config'));
+        }
+
+        $this->activityRunner = $activityRunner;
     }
 
     /**

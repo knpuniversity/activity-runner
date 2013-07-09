@@ -1,0 +1,7 @@
+<?php
+
+// Absolute path to the course metadata. This is used as a fallback location to
+// search for activity configurations. It may be a string or an array.
+$app['courses_path'] = __DIR__.'/../courses/';
+
+return $app;

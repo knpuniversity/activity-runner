@@ -24,7 +24,11 @@ class ActivityController
 
         $activityRunner = $app['activity_runner'];
 
-        $result = $activityRunner->run($activityName, $configPath, $inputFiles);
+        if ($configPath = $request->request->get('config')) {
+            $activityRunner->setConfigPaths($configPath);
+        }
+
+        $result = $activityRunner->run($activityName, $inputFiles);
         $result->setFormat($request->request->get('output-format', 'yaml'));
 
         return (string) $result;

@@ -19,12 +19,16 @@ $app['activity_factory'] = function ($app) {
 };
 
 $app['activity_runner'] = $app->share(function ($app) {
-    return new KnpU\ActivityRunner\ActivityRunner(
+    $activityRunner = new KnpU\ActivityRunner\ActivityRunner(
         $app['asserter'],
         $app['config_builder'],
         $app['activity_factory'],
         $app['worker_bag']
     );
+
+    $activityRunner->setConfigPaths($app['courses_path']);
+
+    return $activityRunner;
 });
 
 $app['asserter'] = $app->share(function () {

@@ -7,6 +7,8 @@ use KnpU\ActivityRunner\Assert\AsserterInterface;
 use KnpU\ActivityRunner\Configuration\ActivityConfigBuilder;
 use KnpU\ActivityRunner\Factory\ActivityFactory;
 use KnpU\ActivityRunner\Worker\WorkerBag;
+use KnpU\ActivityRunner\Exception\UnexpectedTypeException;
+use Symfony\Component\Finder\Finder;
 
 /**
  * @author Kristen Gilden <kristen.gilden@gmail.com>
@@ -17,6 +19,11 @@ class ActivityRunner
      * @var AsserterInterface
      */
     protected $asserter;
+
+    /**
+     * @var array
+     */
+    protected $configPaths;
 
     /**
      * @var ActivityConfigBuilder
@@ -52,15 +59,35 @@ class ActivityRunner
     }
 
     /**
+     * Sets the configuration paths. They either point to specific files or
+     * even entire directories in which case all files named `activities.yml`
+     * are considered to be activity configuration files.
+     *
+     * @param string|array $paths
+     *
+     * @throws UnexpectedTypeException
+     */
+    public function setConfigPaths($paths)
+    {
+        if (is_string($paths)) {
+            $paths = array($paths);
+        } else if (!is_array($paths)) {
+            throw new UnexpectedTypeException($paths, 'string|array');
+        }
+
+        $this->configPaths = $paths;
+    }
+
+    /**
      * @param string $activityName
      * @param string $configPath
      * @param Collection $inputFiles
      *
      * @return \KnpU\ActivityRunner\Result
      */
-    public function run($activityName, $configPath, Collection $inputFiles)
+    public function run($activityName, Collection $inputFiles)
     {
-        $config = $this->buildConfig($configPath);
+        $config = $this->buildConfig();
 
         $this->factory->setConfig($config);
         $activity = $this->factory->createActivity($activityName, $inputFiles);
@@ -86,9 +113,30 @@ class ActivityRunner
      *
      * @return array
      */
-    private function buildConfig($configPath)
+    private function buildConfig()
     {
-        return $this->configBuilder->build($configPath);
+        $rawPaths      = $this->configPaths;
+        $directories   = array();
+        $resolvedPaths = array();
+
+        foreach ($rawPaths as $rawPath) {
+            if (is_dir($rawPath)) {
+                $directories[] = $rawPath;
+            } else {
+                $resolvedPaths[] = $rawPath;
+            }
+        }
+
+        if (!empty($directories)) {
+            $finder = new Finder();
+            $finder->in($directories)->files()->name('activities.yml');
+
+            foreach ($finder as $file) {
+                $resolvedPaths[] = $file;
+            }
+        }
+
+        return $this->configBuilder->build($resolvedPaths);
     }
 
     /**
