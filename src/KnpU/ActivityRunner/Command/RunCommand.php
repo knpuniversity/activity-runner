@@ -29,7 +29,7 @@ class RunCommand extends Command
             ->setDefinition(array(
                 new InputArgument('activity', InputArgument::REQUIRED, 'Name of the activity to be executed'),
                 new InputArgument('file', InputArgument::IS_ARRAY, 'Input file paths'),
-                new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Path to the configuration YAML file', './metadata.yml'),
+                new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Path to the configuration YAML file'),
                 new InputOption('input-format', 'i', InputOption::VALUE_REQUIRED, 'Desired input format', 'fs'),
                 new InputOption('output-format', 'o', InputOption::VALUE_REQUIRED, 'Desired output format')
             ))
@@ -108,7 +108,7 @@ EOD
 
         $activityRunner = $app['activity_runner'];
 
-        if ($input->hasOption('config')) {
+        if ($config = $input->getOption('config')) {
             $activityRunner->setConfigPaths($input->getOption('config'));
         }
 
