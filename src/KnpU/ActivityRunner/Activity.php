@@ -186,7 +186,9 @@ class Activity implements ActivityInterface
             throw new UnexpectedTypeException($context, 'array');
         }
 
-        return $context;
+        $this->context = $context;
+
+        return $this->context;
     }
 
     /**
