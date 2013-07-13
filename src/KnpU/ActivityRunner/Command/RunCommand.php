@@ -136,20 +136,32 @@ EOD
 
         $inputFiles = new ArrayCollection(array_flip($input->getArgument('file')));
 
-        foreach ($inputFiles as $filePath => $fileContents) {
+        // create one stream for stdin - we'll create individual streams below if we're not using stdin
+        $inputStream = $isStdin ? fopen('php://stdin', 'r') : false;
 
-            if (!$isStdin) {
-                if (!is_file($filePath)) {
-                    // Resolving relative paths to absolute for easier debugging.
-                    throw new FileNotFoundException((0 !== strpos($filePath, '/', 0) ? __DIR__.'/'.$filePath : $filePath));
-                }
+        // if we're stdin, read the one stream and split on the 003 character
+        if ($isStdin) {
+            $inputContents = $this->readStream($inputStream, $inputFiles->getKeys());
 
-                if (!is_readable($filePath)) {
-                    throw new \LogicException(sprintf('The file `%s` is not readable.', $filePath));
-                }
+            foreach ($inputContents as $filePath => $fileContents) {
+                $inputFiles->set($filePath, $fileContents);
             }
 
-            $inputStream  = fopen($isStdin ? 'php://stdin' : $filePath, 'r');
+            return $inputFiles;
+        }
+
+        foreach ($inputFiles as $filePath => $fileContents) {
+
+            if (!is_file($filePath)) {
+                // Resolving relative paths to absolute for easier debugging.
+                throw new FileNotFoundException((0 !== strpos($filePath, '/', 0) ? __DIR__.'/'.$filePath : $filePath));
+            }
+
+            if (!is_readable($filePath)) {
+                throw new \LogicException(sprintf('The file `%s` is not readable.', $filePath));
+            }
+
+            $inputStream  = fopen($filePath, 'r');
             $fileContents = $this->readStream($inputStream);
 
             fclose($inputStream);
@@ -167,12 +179,36 @@ EOD
      *
      * @throws \RuntimeException
      */
-    private function readStream($inputStream)
+
+    /**
+     * Reads a stream
+     *
+     * This, unfortunately, acts in 2 very different ways depending on if
+     * $files is empty or not:
+     *
+     *      a) If $files is empty, this is just parsing one file and it returns a string
+     *
+     *      b) If $files is not empty, this is parsing many files. It will go through
+     *          the stream and at each 003 char, it will take all content so far and assign
+     *          it to the first filename in $files. It then continues until the next 003
+     *          and assigns it to the second filename in $files. The return value is an
+     *          associative array of filename => the content of that file.
+     *
+     * @param $inputStream
+     * @param array $files
+     * @return array|string
+     * @throws \RuntimeException
+     * @throws \Exception
+     */
+    private function readStream($inputStream, $files = array())
     {
         $userInput = '';
         $i         = 0;
 
-        // Read chraracter by character
+        $fileContents = array();
+
+        // Read character by character
+        $fileIndex = 0;
         while (!feof($inputStream)) {
             $c = fread($inputStream, 1);
 
@@ -188,12 +224,27 @@ EOD
 
                 // Pop the last character off the end of our string
                 $userInput = substr($userinput, 0, $i);
+            } elseif ("\003" === $c && !empty($files)) {
+                // reached end of file and $files isn't empty, so we're expecting multiple files
+
+                if (!isset($files[$fileIndex])) {
+                    throw new \Exception(sprintf('Found "%s" file endings but we\'ve run out of files!', $fileIndex+1));
+                }
+
+                $filename = $files[$fileIndex];
+                $fileContents[$filename] = $userInput;
+
+                // reset the input, up the file index
+                $userInput = '';
+                $fileIndex++;
+
             } else {
                 $userInput .= $c;
                 $i--;
             }
         }
 
-        return $userInput;
+        // are we returning contents of just one file or many files?
+        return empty($files) ? $userInput : $fileContents;
     }
 }
