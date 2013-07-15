@@ -67,16 +67,17 @@ class ActivityConfigBuilder
                 throw new FileNotFoundException($configPath);
             }
 
-            $rawConfig     = $this->yaml->parse(file_get_contents($configPath));
             $configBaseDir = dirname($configPath);
+
+            $rawConfig = $this->yaml->parse(file_get_contents($configPath));
+            $rawConfig = $this->resolveEntryPoints($configBaseDir, $rawConfig);
+            $rawConfig = $this->resolveRelativePaths($configBaseDir, $rawConfig);
 
             $configs[] = $rawConfig;
         }
 
         $config = $this->processor->processConfiguration($this->definition, $configs);
 
-        $config = $this->resolveEntryPoints($configBaseDir, $config);
-        $config = $this->resolveRelativePaths($configBaseDir, $config);
 
         return $config;
     }

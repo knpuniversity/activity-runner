@@ -63,6 +63,45 @@ class ActivityConfigBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $config);
     }
 
+    public function testBuildPrefixesMultipleRelativePathsCorrectly()
+    {
+        $baseDirA = __DIR__.'/../Fixtures/DirA/';
+        $baseDirB = __DIR__.'/../Fixtures/DirB/';
+
+        $config = array('skeletons' => array('baz.php'), 'entry_point' => 0);
+
+        // Sets up the configuration builder.
+        $processor     = $this->getMockProcessor();
+        $configuration = $this->getMockConfiguration();
+        $yaml          = $this->getMockYaml();
+
+        $yaml
+            ::staticExpects($this->at(0))
+            ->method('parse')
+            ->will($this->returnValue(array('child_a' => $config)))
+        ;
+
+        $yaml
+            ::staticExpects($this->at(1))
+            ->method('parse')
+            ->will($this->returnValue(array('child_b' => $config)))
+        ;
+
+        $processor
+            ->expects($this->any())
+            ->method('processConfiguration')
+            ->will($this->returnCallback(function ($ignored, array $configs) {
+                return array_merge($configs[0], $configs[1]);
+            }))
+        ;
+
+        $builder = new ActivityConfigBuilder($processor, $configuration, $yaml);
+        $actualConfig = $builder->build(array($baseDirA.'metadata.yml', $baseDirB.'metadata.yml'));
+
+        $this->assertContains('DirA', $actualConfig['child_a']['skeletons'][0]);
+        $this->assertCOntains('DirB', $actualConfig['child_b']['skeletons'][0]);
+    }
+
     /**
      * @dataProvider entryPointProvider
      *
@@ -129,7 +168,9 @@ class ActivityConfigBuilderTest extends \PHPUnit_Framework_TestCase
         $processor
             ->expects($this->any())
             ->method('processConfiguration')
-            ->will($this->returnValue($config))
+            ->will($this->returnCallback(function ($ignored, array $config) {
+                return $config[0];
+            }))
         ;
 
         return new ActivityConfigBuilder($processor, $configuration, $yaml);
