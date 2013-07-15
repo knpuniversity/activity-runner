@@ -173,14 +173,6 @@ EOD
     }
 
     /**
-     * @param unknown $inputStream
-     *
-     * @return string
-     *
-     * @throws \RuntimeException
-     */
-
-    /**
      * Reads a stream
      *
      * This, unfortunately, acts in 2 very different ways depending on if
