@@ -8,6 +8,7 @@ use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -35,13 +36,16 @@ class PhpWorker implements WorkerInterface
         $inputFiles = $activity->getInputFiles();
         $entryPoint = $activity->getEntryPoint();
 
-        $baseDir = $this->setUp($inputFiles, $this->filesystem);
-        $output  = $this->execute($baseDir, $entryPoint);
-
-        $this->tearDown($baseDir, $this->filesystem);
-
-        $result = new Result($output);
+        $result = new Result();
         $result->setInputFiles($inputFiles);
+
+        $process = $this->execute($inputFiles, $entryPoint);
+
+        if ($process->isSuccessful()) {
+            $result->setOutput($process->getOutput());
+        } else {
+            $result->setLanguageError($process->getErrorOutput());
+        }
 
         return $result;
     }
@@ -71,24 +75,40 @@ class PhpWorker implements WorkerInterface
     }
 
     /**
-     * Runs the PHP interpreter on user input.
+     * Sets up the environment, executes user code and tears the environment
+     * down again.
+     *
+     * @param Collection $files
+     * @param string $entryPoint
+     *
+     * @return Process  The process run; can be used to retrieve output
+     */
+    private function execute(Collection $files, $entryPoint)
+    {
+        $baseDir = $this->setUp($files, $this->filesystem);
+
+        $process = $this->createProcess($baseDir, $entryPoint);
+        $process->run();
+
+        $this->tearDown($baseDir, $this->filesystem);
+
+        return $process;
+    }
+
+    /**
+     * Creates a new PHP process to execute the script.
      *
      * @param string $baseDir     Base directory
      * @param string $entryPoint  Single point of entry; the file that gets executed
      *
-     * @return string  Command output
+     * @return Process
      */
-    private function execute($baseDir, $entryPoint)
+    private function createProcess($baseDir, $entryPoint)
     {
         $phpFinder = new PhpExecutableFinder();
+        $php       = $phpFinder->find();
 
-        $path = $baseDir.'/'.$entryPoint;
-        $php  = $phpFinder->find();
-        $cmd  = sprintf('%s %s', $php, $path);
-
-        exec($cmd, $output);
-
-        return implode("\n", $output);
+        return new Process(sprintf('%s %s/%s', $php, $baseDir, $entryPoint));
     }
 
     /**
