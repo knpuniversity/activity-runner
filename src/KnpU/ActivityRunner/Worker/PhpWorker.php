@@ -15,6 +15,19 @@ use Symfony\Component\Process\PhpExecutableFinder;
 class PhpWorker implements WorkerInterface
 {
     /**
+     * @var Filesystem
+     */
+    protected $filesystem;
+
+    /**
+     * @param Filesystem $filesystem
+     */
+    public function __construct(Filesystem $filesystem)
+    {
+        $this->filesystem = $filesystem;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function render(ActivityInterface $activity)
@@ -22,12 +35,10 @@ class PhpWorker implements WorkerInterface
         $inputFiles = $activity->getInputFiles();
         $entryPoint = $activity->getEntryPoint();
 
-        $filesystem = new Filesystem();
-
-        $baseDir = $this->setUp($inputFiles, $filesystem);
+        $baseDir = $this->setUp($inputFiles, $this->filesystem);
         $output  = $this->execute($baseDir, $entryPoint);
 
-        $this->tearDown($baseDir, $filesystem);
+        $this->tearDown($baseDir, $this->filesystem);
 
         $result = new Result($output);
         $result->setInputFiles($inputFiles);

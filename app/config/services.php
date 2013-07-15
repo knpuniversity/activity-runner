@@ -55,6 +55,10 @@ $app['config_processor'] = $app->share(function () {
     return new Symfony\Component\Config\Definition\Processor();
 });
 
+$app['filesystem'] = $app->share(function () {
+    return new Symfony\Component\Filesystem\Filesystem();
+});
+
 $app['worker_bag'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\WorkerBag(array(
         $app['worker.twig'],
@@ -70,8 +74,10 @@ $app['worker.chained'] = $app->share(function ($app) {
     ));
 });
 
-$app['worker.php'] = $app->share(function () {
-    return new KnpU\ActivityRunner\Worker\PhpWorker();
+$app['worker.php'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Worker\PhpWorker(
+        $app['filesystem']
+    );
 });
 
 $app['worker.twig'] = $app->share(function () {
