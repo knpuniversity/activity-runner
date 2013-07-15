@@ -154,7 +154,7 @@ EOD
 
             if (!is_file($filePath)) {
                 // Resolving relative paths to absolute for easier debugging.
-                throw new FileNotFoundException((0 !== strpos($filePath, '/', 0) ? __DIR__.'/'.$filePath : $filePath));
+                throw new FileNotFoundException((0 !== strpos($filePath, '/', 0) ? getcwd().'/'.$filePath : $filePath));
             }
 
             if (!is_readable($filePath)) {
