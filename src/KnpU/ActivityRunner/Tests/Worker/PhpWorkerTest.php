@@ -4,6 +4,7 @@ namespace KnpU\ActivityRunner\Tests\Worker;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Worker\PhpWorker;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -31,7 +32,7 @@ EOD;
 
         $activity = $this->getMockActivity($files, 'base.php');
 
-        $worker = new PhpWorker();
+        $worker = new PhpWorker(new Filesystem());
         $result = $worker->render($activity);
 
         $this->assertContains('Hello, world!', $result->getOutput());
@@ -39,7 +40,7 @@ EOD;
 
     public function testSupportsReturnsTrueIfNotPhp()
     {
-        $worker = new PhpWorker();
+        $worker = new PhpWorker(new Filesystem());
 
         $this->assertTrue($worker->supports('foo.php', array()));
     }
@@ -51,7 +52,7 @@ EOD;
      */
     public function testSupportsReturnsFalseIfNotPhp($fileName)
     {
-        $worker = new PhpWorker();
+        $worker = new PhpWorker(new Filesystem());
 
         $this->assertFalse($worker->supports($fileName, array()));
     }
