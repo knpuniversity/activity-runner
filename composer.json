@@ -20,7 +20,8 @@
         "symfony/process": "~2.2",
         "symfony/yaml": "~2.2",
         "twig/twig": "~1.12",
-        "silex/silex": "~1.0"
+        "silex/silex": "~1.0",
+        "nikic/php-parser": "~0.9"
     },
     "autoload": {
         "psr-0": {
