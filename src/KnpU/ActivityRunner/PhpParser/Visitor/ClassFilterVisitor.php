@@ -29,12 +29,7 @@ class ClassFilterVisitor extends \PHPParser_NodeVisitorAbstract
      */
     public function leaveNode(\PHPParser_Node $node)
     {
-        if ($node instanceof \PHPParser_Node_Stmt_Class) {
-
-            // Keep classes.
-            return null;
-
-        } elseif (is_array($node->stmts)) {
+        if (is_array($node->stmts)) {
             // Iterates over children and finds all classes, then returns them
             // all. This way the classes bubble up to the top of the tree.
             $classes = array();
@@ -49,9 +44,6 @@ class ClassFilterVisitor extends \PHPParser_NodeVisitorAbstract
                 return $classes;
             }
         }
-
-        // Remove the node as there were no immediate child nodes as classes.
-        return false;
     }
 
     /**
