@@ -95,6 +95,8 @@ class ActivityRunner
         $worker = $this->getWorker($config[$activityName]['worker']);
         $result = $worker->render($activity);
 
+        $worker->injectInternals($activity->getSuite());
+
         // Only validate if we're at least somewhat valid.
         if ($result->isValid()) {
             // Verify the output.
