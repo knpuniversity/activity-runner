@@ -59,6 +59,10 @@ $app['filesystem'] = $app->share(function () {
     return new Symfony\Component\Filesystem\Filesystem();
 });
 
+$app['php_parser'] = $app->share(function () {
+    return new \PHPParser_Parser(new \PHPParser_Lexer());
+});
+
 $app['worker_bag'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\WorkerBag(array(
         $app['worker.twig'],
@@ -76,7 +80,8 @@ $app['worker.chained'] = $app->share(function ($app) {
 
 $app['worker.php'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\PhpWorker(
-        $app['filesystem']
+        $app['filesystem'],
+        $app['php_parser']
     );
 });
 

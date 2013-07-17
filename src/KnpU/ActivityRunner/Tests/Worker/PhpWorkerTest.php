@@ -32,7 +32,7 @@ EOD;
 
         $activity = $this->getMockActivity($files, 'base.php');
 
-        $worker = new PhpWorker(new Filesystem());
+        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
         $result = $worker->render($activity);
 
         $this->assertContains('Hello, world!', $result->getOutput());
@@ -40,7 +40,7 @@ EOD;
 
     public function testSupportsReturnsTrueIfNotPhp()
     {
-        $worker = new PhpWorker(new Filesystem());
+        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
 
         $this->assertTrue($worker->supports('foo.php', array()));
     }
@@ -52,7 +52,7 @@ EOD;
      */
     public function testSupportsReturnsFalseIfNotPhp($fileName)
     {
-        $worker = new PhpWorker(new Filesystem());
+        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
 
         $this->assertFalse($worker->supports($fileName, array()));
     }
@@ -90,5 +90,17 @@ EOD;
         ;
 
         return $activity;
+    }
+
+    /**
+     * @return PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockParser()
+    {
+        return $this
+            ->getMockBuilder('PHPParser_Parser')
+            ->disableOriginalConstructor()
+            ->getMock()
+        ;
     }
 }

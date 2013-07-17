@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\Collection;
 use KnpU\ActivityRunner\Result;
 use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\AssertSuite;
+use KnpU\ActivityRunner\Assert\PhpAwareInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -21,11 +22,18 @@ class PhpWorker implements WorkerInterface
     protected $filesystem;
 
     /**
-     * @param Filesystem $filesystem
+     * @var \PHPParser_Parser
      */
-    public function __construct(Filesystem $filesystem)
+    protected $parser;
+
+    /**
+     * @param Filesystem $filesystem
+     * @param \PHPParser_Parser $parser
+     */
+    public function __construct(Filesystem $filesystem, \PHPParser_Parser $parser)
     {
         $this->filesystem = $filesystem;
+        $this->parser     = $parser;
     }
 
     /**
@@ -63,7 +71,9 @@ class PhpWorker implements WorkerInterface
      */
     public function injectInternals(AssertSuite $suite)
     {
-        // Nothing to inject at this point.
+        if ($suite instanceof PhpAwareInterface) {
+            $suite->setParser($this->parser);
+        }
     }
 
     /**
