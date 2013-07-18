@@ -97,12 +97,12 @@ class ActivityRunner
 
         $worker->injectInternals($activity->getSuite());
 
-        // Only validate if we're at least somewhat valid.
-        if ($result->isValid()) {
-            // Verify the output.
-            if ($errors = $this->asserter->validate($result, $activity)) {
-                $result->setValidationErrors($errors);
-            }
+        // Validates the result regardless of whether the activity failed
+        // completely or ran successfully.
+        $errors = $this->asserter->validate($result, $activity);
+
+        if ($errors) {
+            $result->setValidationErrors($errors);
         }
 
         return $result;
