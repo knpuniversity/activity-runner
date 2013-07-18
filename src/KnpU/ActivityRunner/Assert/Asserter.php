@@ -88,6 +88,8 @@ class Asserter implements AsserterInterface
                 $test->invoke($suite, array());
             } catch (\PHPUnit_Framework_AssertionFailedError $e) {
                 $failures[] = $e->getMessage();
+            } catch (\PHPParser_Error $e) {
+                $failures[] = $e->getMessage();
             }
         }
 
