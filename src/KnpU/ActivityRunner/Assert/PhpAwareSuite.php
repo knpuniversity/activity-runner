@@ -25,7 +25,7 @@ abstract class PhpAwareSuite extends AssertSuite implements PhpAwareInterface
      *
      * @param string $fileName
      *
-     * @return \PHPParser_Node[]|false  Nodes or false, if parsing failed.
+     * @return \PHPParser_Node[]
      *
      * @throws \LogicException if the parser is not set
      * @throws \LogicException if no such input file exists
@@ -42,11 +42,7 @@ abstract class PhpAwareSuite extends AssertSuite implements PhpAwareInterface
             throw new \LogicException(sprintf('No file named `%s` found as an input file, possible values are: `%s`', $fileName, implode('`, `', $inputFiles->getKeys())));
         }
 
-        try {
-            return $this->parser->parse($inputFiles->get($fileName));
-        } catch (\PHPParser_Error $e) {
-            return false;
-        }
+        return $this->parser->parse($inputFiles->get($fileName));
     }
 
     /**
