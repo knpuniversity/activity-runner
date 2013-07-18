@@ -14,22 +14,13 @@ use KnpU\ActivityRunner\Result;
 interface AsserterInterface
 {
     /**
-     * Is the result for the given activity valid?
+     * Validates the result given the related activity. An empty array is
+     * returned for valid results.
      *
      * @param Result $result
      * @param ActivityInterface $activity
      *
-     * @return boolean
+     * @return string[] A list of failure messages
      */
-    function isValid(Result $result, ActivityInterface $activity);
-
-    /**
-     * Gets the validation errors for a given result & activity.
-     *
-     * @param Result $result
-     * @param ActivityInterface $activity
-     *
-     * @return string[]  A list of failure messages
-     */
-    function getValidationErrors(Result $result, ActivityInterface $activity);
+    function validate(Result $result, ActivityInterface $activity);
 }

@@ -11,7 +11,7 @@ use KnpU\ActivityRunner\Tests\Fixtures\FailingAssertSuite;
  */
 class AsserterTest extends \PHPUnit_Framework_TestCase
 {
-    public function testGetValidationErrors()
+    public function testValidateReturnsErrors()
     {
         // Mocking the suite would be very difficult since reflection
         // is used internally to invoke class methods and set private
@@ -26,7 +26,7 @@ class AsserterTest extends \PHPUnit_Framework_TestCase
 
         $asserter = new Asserter();
 
-        $errors = $asserter->getValidationErrors($this->getMockResult(), $activity);
+        $errors = $asserter->validate($this->getMockResult(), $activity);
 
         $this->assertEquals(array('FooBarBaz'), $errors);
     }

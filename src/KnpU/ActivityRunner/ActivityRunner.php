@@ -100,9 +100,7 @@ class ActivityRunner
         // Only validate if we're at least somewhat valid.
         if ($result->isValid()) {
             // Verify the output.
-            if (!$this->asserter->isValid($result, $activity)) {
-                $errors = $this->asserter->getValidationErrors($result, $activity);
-
+            if ($errors = $this->asserter->validate($result, $activity)) {
                 $result->setValidationErrors($errors);
             }
         }

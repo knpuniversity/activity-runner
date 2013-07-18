@@ -35,15 +35,7 @@ class Asserter implements AsserterInterface
     /**
      * {@inheritDoc}
      */
-    public function isValid(Result $result, ActivityInterface $activity)
-    {
-        return 1 > count($this->getValidationErrors($result, $activity));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getValidationErrors(Result $result, ActivityInterface $activity)
+    public function validate(Result $result, ActivityInterface $activity)
     {
         $suite = $activity->getSuite();
 
