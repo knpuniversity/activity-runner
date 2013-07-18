@@ -21,7 +21,8 @@
         "symfony/yaml": "~2.2",
         "twig/twig": "~1.12",
         "silex/silex": "~1.0",
-        "nikic/php-parser": "~0.9"
+        "nikic/php-parser": "~0.9",
+        "doctrine/annotations": "~1.1"
     },
     "autoload": {
         "psr-0": {
