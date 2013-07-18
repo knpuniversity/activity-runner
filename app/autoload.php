@@ -1,5 +1,7 @@
 <?php
 
+use Doctrine\Common\Annotations\AnnotationRegistry;
+
 if (is_file($autoloadFile = __DIR__.'/../vendor/autoload.php')) {
     // Installed as a standalone project
 } else if (is_file($autoloadFile = __DIR__.'/../../../autoload.php')) {
@@ -9,3 +11,5 @@ if (is_file($autoloadFile = __DIR__.'/../vendor/autoload.php')) {
 }
 
 $loader = require $autoloadFile;
+
+AnnotationRegistry::registerLoader(array($loader, 'loadClass'));

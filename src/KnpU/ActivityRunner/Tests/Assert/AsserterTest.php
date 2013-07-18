@@ -24,7 +24,14 @@ class AsserterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(new FailingAssertSuite()))
         ;
 
-        $asserter = new Asserter();
+        $runIf = $this->getMockRunIf();
+        $runIf
+            ->expects($this->any())
+            ->method('isAllowedToRun')
+            ->will($this->returnValue(true))
+        ;
+
+        $asserter = new Asserter($this->getMockReader(), $runIf);
 
         $errors = $asserter->validate($this->getMockResult(), $activity);
 
@@ -45,6 +52,26 @@ class AsserterTest extends \PHPUnit_Framework_TestCase
     {
         return $this
             ->getMockBuilder('KnpU\\ActivityRunner\\Result')
+            ->disableOriginalConstructor()
+            ->getMock()
+        ;
+    }
+
+    /**
+     * @return \Doctrine\Common\Annotations\Reader|PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockReader()
+    {
+        return $this->getMock('Doctrine\\Common\\Annotations\\Reader');
+    }
+
+    /**
+     * @return \Knpu\ActivityRunner\Assert\Suite\RunIf|PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockRunIf()
+    {
+        return $this
+            ->getMockBuilder('KnpU\\ActivityRunner\\Assert\\Suite\\RunIf')
             ->disableOriginalConstructor()
             ->getMock()
         ;

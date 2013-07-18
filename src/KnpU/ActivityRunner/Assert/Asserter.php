@@ -2,6 +2,8 @@
 
 namespace KnpU\ActivityRunner\Assert;
 
+use Doctrine\Common\Annotations\Reader;
+use KnpU\ActivityRunner\Assert\Suite\RunIf;
 use KnpU\ActivityRunner\Exception\UnexpectedTypeException;
 use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Result;
@@ -11,6 +13,18 @@ use KnpU\ActivityRunner\Result;
  */
 class Asserter implements AsserterInterface
 {
+    /**
+     * @var Reader
+     */
+    protected $annotationsReader;
+
+    /**
+     * Used if no annotation is specified
+     *
+     * @var RunIf
+     */
+    protected $defaultAnnotation;
+
     /**
      * Cached test results. Each element consists of a list of outputs run
      * with that specific suite. The key is the object hash of the test suite.
@@ -33,6 +47,16 @@ class Asserter implements AsserterInterface
     private $cachedResults = array();
 
     /**
+     * @param Reader $annotationsReader
+     * @param RunIf $defaultAnnotation
+     */
+    public function __construct(Reader $annotationsReader, RunIf $defaultAnnotation)
+    {
+        $this->annotationsReader = $annotationsReader;
+        $this->defaultAnnotation = $defaultAnnotation;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function validate(Result $result, ActivityInterface $activity)
@@ -49,6 +73,16 @@ class Asserter implements AsserterInterface
 
         /** @var $test \ReflectionMethod */
         foreach ($this->getSuiteTests($suite) as $test) {
+
+            $annotation = $this->annotationsReader->getMethodAnnotation($test, 'KnpU\\ActivityRunner\\Assert\\Suite\\RunIf');
+
+            if (!$annotation) {
+                $annotation = $this->defaultAnnotation;
+            }
+
+            if (!$annotation->isAllowedToRun($result)) {
+                continue;
+            }
 
             try {
                 $test->invoke($suite, array());

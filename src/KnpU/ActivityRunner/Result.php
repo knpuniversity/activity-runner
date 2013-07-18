@@ -118,6 +118,14 @@ class Result
     }
 
     /**
+     * @return boolean
+     */
+    public function hasLanguageError()
+    {
+        return (boolean) $this->languageError;
+    }
+
+    /**
      * @param integer $verbosity
      */
     public function setVerbosity($verbosity)

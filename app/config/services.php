@@ -31,8 +31,21 @@ $app['activity_runner'] = $app->share(function ($app) {
     return $activityRunner;
 });
 
-$app['asserter'] = $app->share(function () {
-    return new KnpU\ActivityRunner\Assert\Asserter();
+$app['annotation_reader'] = $app->share(function () {
+    return new Doctrine\Common\Annotations\AnnotationReader();
+});
+
+$app['annotation_default_run_state'] = function () {
+    return new KnpU\ActivityRunner\Assert\Suite\RunIf(array(
+        'value' => new KnpU\ActivityRunner\Assert\Suite\Passed()
+    ));
+};
+
+$app['asserter'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Assert\Asserter(
+        $app['annotation_reader'],
+        $app['annotation_default_run_state']
+    );
 });
 
 $app['assert_loader'] = $app->share(function () {
