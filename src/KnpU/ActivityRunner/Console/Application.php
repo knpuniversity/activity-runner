@@ -1,6 +1,6 @@
 <?php
 
-namespace KnpU\ActivityRunner;
+namespace KnpU\ActivityRunner\Console;
 
 use KnpU\ActivityRunner\Console\Command\RunCommand;
 use Symfony\Component\Console\Application as BaseApplication;

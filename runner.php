@@ -3,7 +3,7 @@
 
 require __DIR__.'/app/autoload.php';
 
-use KnpU\ActivityRunner\Application;
+use KnpU\ActivityRunner\Console\Application;
 
 $application = new Application();
 $application->run();
