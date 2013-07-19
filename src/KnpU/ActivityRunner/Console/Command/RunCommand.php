@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com
  */
-class RunCommand extends ActivityRunnerCommand
+class RunCommand extends PimpleAwareCommand
 {
     /**
      * @var \KnpU\ActivityRunner\ActivityRunner
@@ -97,9 +97,8 @@ EOD
      */
     public function initialize(InputInterface $input, OutputInterface $output)
     {
-        parent::initialize($input, $output);
-
-        $activityRunner = $this->get('activity_runner');
+        $pimple = $this->getPimple();
+        $activityRunner = $pimple['activity_runner'];
 
         if ($config = $input->getOption('config')) {
             $activityRunner->setConfigPaths($input->getOption('config'));

@@ -13,7 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
  *
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
  */
-class Application extends BaseApplication
+class Application extends PimpleAwareApplication
 {
     /**
      * {@inheritDoc}
@@ -30,7 +30,7 @@ class Application extends BaseApplication
     {
         $defaultCommands = parent::getDefaultCommands();
 
-        $defaultCommands[] = new RunCommand();
+        $defaultCommands[] = $this->add(new RunCommand());
 
         return $defaultCommands;
     }
