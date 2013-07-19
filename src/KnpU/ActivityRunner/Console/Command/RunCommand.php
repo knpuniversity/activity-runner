@@ -1,6 +1,6 @@
 <?php
 
-namespace KnpU\ActivityRunner\Command;
+namespace KnpU\ActivityRunner\Console\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;

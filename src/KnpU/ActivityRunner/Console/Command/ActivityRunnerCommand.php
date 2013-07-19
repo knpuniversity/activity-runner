@@ -1,6 +1,6 @@
 <?php
 
-namespace Knpu\ActivityRunner\Command;
+namespace Knpu\ActivityRunner\Console\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,7 +21,7 @@ abstract class ActivityRunnerCommand extends Command
      */
     public function initialize(InputInterface $input, OutputInterface $output)
     {
-        $configPath = __DIR__.'/../../../../app/config/';
+        $configPath = __DIR__.'/../../../../../app/config/';
         $paramsFile = $configPath.'parameters.php';
 
         $app = require($configPath.'services.php');

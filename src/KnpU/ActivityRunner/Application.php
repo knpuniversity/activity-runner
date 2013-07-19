@@ -2,7 +2,7 @@
 
 namespace KnpU\ActivityRunner;
 
-use KnpU\ActivityRunner\Command\RunCommand;
+use KnpU\ActivityRunner\Console\Command\RunCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 
