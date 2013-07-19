@@ -4,7 +4,6 @@ namespace KnpU\ActivityRunner\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -13,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com
  */
-class RunCommand extends Command
+class RunCommand extends ActivityRunnerCommand
 {
     /**
      * @var \KnpU\ActivityRunner\ActivityRunner
@@ -98,15 +97,9 @@ EOD
      */
     public function initialize(InputInterface $input, OutputInterface $output)
     {
-        $app = require(__DIR__.'/../../../../app/config/services.php');
+        parent::initialize($input, $output);
 
-        if (is_file($paramFile = __DIR__.'/../../../../app/config/parameters.php')) {
-            $app = require($paramFile);
-        } else {
-            $app = require($paramFile.'.dist');
-        }
-
-        $activityRunner = $app['activity_runner'];
+        $activityRunner = $this->get('activity_runner');
 
         if ($config = $input->getOption('config')) {
             $activityRunner->setConfigPaths($input->getOption('config'));
