@@ -72,6 +72,10 @@ $app['filesystem'] = $app->share(function () {
     return new Symfony\Component\Filesystem\Filesystem();
 });
 
+$app['path_expander'] = $app->share(function () {
+    return new KnpU\ActivityRunner\Configuration\PathExpander();
+});
+
 $app['php_parser'] = $app->share(function () {
     return new \PHPParser_Parser(new \PHPParser_Lexer());
 });
