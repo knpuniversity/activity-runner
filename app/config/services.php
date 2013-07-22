@@ -56,7 +56,8 @@ $app['config_builder'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Configuration\ActivityConfigBuilder(
         $app['config_processor'],
         $app['config_definition'],
-        $app['yaml']
+        $app['yaml'],
+        $app['path_expander']
     );
 });
 

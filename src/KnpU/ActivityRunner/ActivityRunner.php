@@ -5,7 +5,6 @@ namespace KnpU\ActivityRunner;
 use Doctrine\Common\Collections\Collection;
 use KnpU\ActivityRunner\Assert\AsserterInterface;
 use KnpU\ActivityRunner\Configuration\ActivityConfigBuilder;
-use KnpU\ActivityRunner\Configuration\PathExpander;
 use KnpU\ActivityRunner\Factory\ActivityFactory;
 use KnpU\ActivityRunner\Worker\WorkerBag;
 use Symfony\Component\Finder\Finder;
@@ -36,11 +35,6 @@ class ActivityRunner
     protected $factory;
 
     /**
-     * @var PathExpander
-     */
-    protected $pathExpander;
-
-    /**
      * @var WorkerBag
      */
     protected $workerBag;
@@ -49,20 +43,17 @@ class ActivityRunner
      * @param AsserterInterface $asserter
      * @param ActivityConfigBuilder $configBuilder
      * @param ActivityFactory $factory
-     * @param PathExpander $pathExpander
      * @param WorkerBag $workerBag
      */
     public function __construct(
         AsserterInterface $asserter,
         ActivityConfigBuilder $configBuilder,
         ActivityFactory $factory,
-        PathExpander $pathExpander,
         WorkerBag $workerBag
     ) {
         $this->asserter      = $asserter;
         $this->configBuilder = $configBuilder;
         $this->factory       = $factory;
-        $this->pathExpander  = $pathExpander;
         $this->workerBag     = $workerBag;
     }
 
@@ -87,7 +78,7 @@ class ActivityRunner
      */
     public function run($activityName, Collection $inputFiles)
     {
-        $config = $this->buildConfig();
+        $config = $this->configBuilder->build($this->configPaths);
 
         $this->factory->setConfig($config);
         $activity = $this->factory->createActivity($activityName, $inputFiles);
@@ -106,19 +97,6 @@ class ActivityRunner
         }
 
         return $result;
-    }
-
-    /**
-     * @param string $configPath
-     *
-     * @return array
-     */
-    private function buildConfig()
-    {
-        $paths = $this->configPaths;
-        $paths = $this->pathExpander->expand($paths, 'activities.yml');
-
-        return $this->configBuilder->build($paths);
     }
 
     /**

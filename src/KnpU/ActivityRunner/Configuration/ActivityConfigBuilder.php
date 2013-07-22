@@ -29,18 +29,34 @@ class ActivityConfigBuilder
     protected $yaml;
 
     /**
+     * @var PathExpander|null
+     */
+    protected $pathExpander;
+
+    /**
      * @param Processor $processor
      * @param ConfigurationInterface $definition
      * @param Yaml $yaml
+     * @param PathExpander|null $pathExpander
      */
     public function __construct(
         Processor $processor,
         ConfigurationInterface $definition,
-        Yaml $yaml
+        Yaml $yaml,
+        PathExpander $pathExpander = null
     ) {
         $this->processor  = $processor;
         $this->definition = $definition;
         $this->yaml       = $yaml;
+        $this->setExpander($pathExpander);
+    }
+
+    /**
+     * @param PathExpander|null $expander
+     */
+    public function setExpander(PathExpander $expander = null)
+    {
+        $this->pathExpander = $expander;
     }
 
     /**
@@ -52,6 +68,10 @@ class ActivityConfigBuilder
      */
     public function build($paths)
     {
+        if ($expander = $this->pathExpander) {
+            $paths = $expander->expand($paths, 'activities.yml');
+        }
+
         if (is_string($paths)) {
             $paths = array($paths);
         }
