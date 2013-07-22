@@ -3,6 +3,7 @@
 namespace KnpU\ActivityRunner\Console\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use KnpU\ActivityRunner\Exception\ActivityNotFoundException;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,7 +31,8 @@ class RunCommand extends PimpleAwareCommand
                 new InputArgument('file', InputArgument::IS_ARRAY, 'Input file paths'),
                 new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Path to the configuration YAML file'),
                 new InputOption('input-format', 'i', InputOption::VALUE_REQUIRED, 'Desired input format', 'fs'),
-                new InputOption('output-format', 'o', InputOption::VALUE_REQUIRED, 'Desired output format')
+                new InputOption('output-format', 'o', InputOption::VALUE_REQUIRED, 'Desired output format'),
+                new InputOption('src', 's', InputOption::VALUE_REQUIRED, 'Source directory from where the files must be read'),
             ))
             ->setName('activity:run')
             ->setHelp(<<<EOD
@@ -48,6 +50,16 @@ The <info>input-format</info> option determines the input format. The only suppo
 formats are <comment>fs</comment> (reads the input from all files given by the <info>file</info>
 argument) and <comment>stdin</comment> (reads the input straight from STDIN). When
 passing input from STDIN, separate files by using the "end of text" character ([Ctrl]+[C]).
+
+You can pass the <info>src</info> option when reading user input from the filesystem.
+All input files are expected to be in that directory. Omitting the <info>src</info> option
+will cause the command to look for the files from the crrent working directory.
+
+    # Looks fo files from the specified <info>src</info> path
+    <comment>activity:run foo_actvitiy --src="path/to/input"</comment>
+
+    # Waits the user to start inputting the files over STDIN
+    <comment>activity:run foo_activity -istdin --file="SkelA.php" --file="SkellB.php"</comment>
 
 The <info>output-format</info> option determines the output format. The following
 formats are supported: <comment>yaml</comment>, <comment>array</comment>, <comment>json</comment>.
@@ -142,23 +154,27 @@ EOD
             return $inputFiles;
         }
 
-        foreach ($inputFiles as $filePath => $fileContents) {
+        // Reading from the filesystem.
+        $pimple = $this->getPimple();
 
-            if (!is_file($filePath)) {
-                // Resolving relative paths to absolute for easier debugging.
-                throw new FileNotFoundException((0 !== strpos($filePath, '/', 0) ? getcwd().'/'.$filePath : $filePath));
+        $activityName = $input->getArgument('activity');
+        $inputsPath   = $input->getOption('src') ?: getcwd();
+        $configPath   = $input->getOption('config') ?: $pimple['courses_path'];
+;
+        $configs = $pimple['config_builder']->build($configPath);
+
+        if (!array_key_exists($activityName, $configs)) {
+            throw new ActivityNotFoundException($activityName, array_keys($configs));
+        }
+
+        foreach (array_keys($configs[$activityName]['skeletons']) as $logicalName) {
+            $inputFileName = $inputsPath.'/'.$logicalName;
+
+            if (!is_file($inputFileName)) {
+                throw new FileNotFoundException($inputFileName);
             }
 
-            if (!is_readable($filePath)) {
-                throw new \LogicException(sprintf('The file `%s` is not readable.', $filePath));
-            }
-
-            $inputStream  = fopen($filePath, 'r');
-            $fileContents = $this->readStream($inputStream);
-
-            fclose($inputStream);
-
-            $inputFiles->set($filePath, $fileContents);
+            $inputFiles->set($logicalName, file_get_contents($inputFileName));
         }
 
         return $inputFiles;

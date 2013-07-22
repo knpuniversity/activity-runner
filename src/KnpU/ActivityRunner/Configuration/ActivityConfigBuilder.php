@@ -33,6 +33,8 @@ class ActivityConfigBuilder
      */
     protected $pathExpander;
 
+    protected $tree;
+
     /**
      * @param Processor $processor
      * @param ConfigurationInterface $definition
@@ -97,7 +99,6 @@ class ActivityConfigBuilder
         }
 
         $config = $this->processor->processConfiguration($this->definition, $configs);
-
 
         return $config;
     }
