@@ -28,9 +28,7 @@ class RunCommand extends PimpleAwareCommand
         $this
             ->setDefinition(array(
                 new InputArgument('activity', InputArgument::REQUIRED, 'Name of the activity to be executed'),
-                new InputArgument('file', InputArgument::IS_ARRAY, 'Input file paths'),
                 new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Path to the configuration YAML file'),
-                new InputOption('input-format', 'i', InputOption::VALUE_REQUIRED, 'Desired input format', 'fs'),
                 new InputOption('output-format', 'o', InputOption::VALUE_REQUIRED, 'Desired output format'),
                 new InputOption('src', 's', InputOption::VALUE_REQUIRED, 'Source directory from where the files must be read'),
             ))
@@ -39,27 +37,14 @@ class RunCommand extends PimpleAwareCommand
 The <info>activity:run</info> command makes it very simple to run activities
 from the CLI.
 
-You can pass multiple files by specifying them usng the <info>file</info> argument. The
-<info>input-format</info> option determines how the files are handled: if the option is
-set to <comment>fs</comment> (default), then the files are assumed to be
-actually existing on the filesystem. Setting the option to <comment>stdin</comment> makes
-it possible to read files straight from STDIN. In that case the file names are expected
-to be just the logical names of the files.
+You can change the location from where the input files are read in from by
+specifying the <info>src</info> option. The current work direcotry is used by default.
 
-The <info>input-format</info> option determines the input format. The only supported
-formats are <comment>fs</comment> (reads the input from all files given by the <info>file</info>
-argument) and <comment>stdin</comment> (reads the input straight from STDIN). When
-passing input from STDIN, separate files by using the "end of text" character ([Ctrl]+[C]).
-
-You can pass the <info>src</info> option when reading user input from the filesystem.
-All input files are expected to be in that directory. Omitting the <info>src</info> option
-will cause the command to look for the files from the crrent working directory.
-
-    # Looks fo files from the specified <info>src</info> path
+    # Looks for files from the specified <info>src</info> path
     <comment>activity:run foo_actvitiy --src="path/to/input"</comment>
 
-    # Waits the user to start inputting the files over STDIN
-    <comment>activity:run foo_activity -istdin --file="SkelA.php" --file="SkellB.php"</comment>
+    # Looks for files from the cwd
+    <comment>activity:run foo_activity</comment>
 
 The <info>output-format</info> option determines the output format. The following
 formats are supported: <comment>yaml</comment>, <comment>array</comment>, <comment>json</comment>.
@@ -79,11 +64,6 @@ absolute paths as if the current directory was the configuration file location.
 You can also simply specify a directory. The command will then recursively try
 to find all files named `activities.yml`.
 
-The <comment>context</comment> parameter must point to a PHP script that returns an array of
-context elements - the parameters passed down to twig templates.
-
-The <comment>asserts</comment> parameter may additionally be a PSR namespace. However, the
-class inside the file must extend <comment>KnpU\ActivityRunner\Assert\AssertSuite</comment>.
 EOD
             )
         ;
@@ -95,7 +75,11 @@ EOD
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $activityName = $input->getArgument('activity');
-        $inputFiles   = $this->getInputFiles($input);
+        $inputFiles   = $this->getInputFiles(
+            $activityName,
+            $input->getOption('src'),
+            $input->getOption('config')
+        );
 
         $result = $this->activityRunner->run($activityName, $inputFiles);
         $result->setVerbosity($output->getVerbosity());
@@ -120,54 +104,29 @@ EOD
     }
 
     /**
-     * Reads input files from either stdin or filesystem. When reading from
-     * stdin, simply hit [Ctrl]+[D] after entering a file - this signals the
-     * command to start reading input for the next file.
+     * @param string $activity               Name of the activity
+     * @param string|null $inputsPath        Path to the input files (cwd by default)
+     * @param string|array|null $configPath  Paths to the configuration files
      *
-     * @param InputInterface $input
+     * @return ArrayCollection
      */
-    private function getInputFiles(InputInterface $input)
+    protected function getInputFiles($activity, $inputsPath = null, $configPath = null)
     {
-        $inputFormat = $input->getOption('input-format');
+        $inputsPath = $inputsPath ?: getcwd();
+        $configPath = $configPath ?: $this->get('courses_path');
 
-        if ('stdin' === $inputFormat) {
-            $isStdin = true;
-        } else if ('fs' === $inputFormat) {
-            $isStdin = false;
-        } else {
-            throw new \LogicException(sprintf('Invalid value `%s` for option `input-format`', $inputFormat));
+        $configs = $this
+            ->get('config_builder')
+            ->build($configPath)
+        ;
+
+        if (!array_key_exists($activity, $configs)) {
+            throw new ActivityNotFoundException($activity, array_keys($configs));
         }
 
-        $inputFiles = new ArrayCollection(array_flip($input->getArgument('file')));
+        $inputFiles = new ArrayCollection();
 
-        // create one stream for stdin - we'll create individual streams below if we're not using stdin
-        $inputStream = $isStdin ? fopen('php://stdin', 'r') : false;
-
-        // if we're stdin, read the one stream and split on the 003 character
-        if ($isStdin) {
-            $inputContents = $this->readStream($inputStream, $inputFiles->getKeys());
-
-            foreach ($inputContents as $filePath => $fileContents) {
-                $inputFiles->set($filePath, $fileContents);
-            }
-
-            return $inputFiles;
-        }
-
-        // Reading from the filesystem.
-        $pimple = $this->getPimple();
-
-        $activityName = $input->getArgument('activity');
-        $inputsPath   = $input->getOption('src') ?: getcwd();
-        $configPath   = $input->getOption('config') ?: $pimple['courses_path'];
-;
-        $configs = $pimple['config_builder']->build($configPath);
-
-        if (!array_key_exists($activityName, $configs)) {
-            throw new ActivityNotFoundException($activityName, array_keys($configs));
-        }
-
-        foreach (array_keys($configs[$activityName]['skeletons']) as $logicalName) {
+        foreach (array_keys($configs[$activity]['skeletons']) as $logicalName) {
             $inputFileName = $inputsPath.'/'.$logicalName;
 
             if (!is_file($inputFileName)) {
@@ -181,70 +140,12 @@ EOD
     }
 
     /**
-     * Reads a stream
+     * @param string $serviceOrParameterName
      *
-     * This, unfortunately, acts in 2 very different ways depending on if
-     * $files is empty or not:
-     *
-     *      a) If $files is empty, this is just parsing one file and it returns a string
-     *
-     *      b) If $files is not empty, this is parsing many files. It will go through
-     *          the stream and at each 003 char, it will take all content so far and assign
-     *          it to the first filename in $files. It then continues until the next 003
-     *          and assigns it to the second filename in $files. The return value is an
-     *          associative array of filename => the content of that file.
-     *
-     * @param $inputStream
-     * @param array $files
-     * @return array|string
-     * @throws \RuntimeException
-     * @throws \Exception
+     * @return mixed
      */
-    private function readStream($inputStream, $files = array())
+    protected function get($serviceOrParameterName)
     {
-        $userInput = '';
-        $i         = 0;
-
-        $fileContents = array();
-
-        // Read character by character
-        $fileIndex = 0;
-        while (!feof($inputStream)) {
-            $c = fread($inputStream, 1);
-
-            if (false === $c) {
-                throw new \RuntimeException('Aborted');
-            }
-
-            // Backspace Character
-            if ("\177" === $c) {
-
-                // Move cursor backwards
-                $output->write("\033[1D");
-
-                // Pop the last character off the end of our string
-                $userInput = substr($userinput, 0, $i);
-            } elseif ("\003" === $c && !empty($files)) {
-                // reached end of file and $files isn't empty, so we're expecting multiple files
-
-                if (!isset($files[$fileIndex])) {
-                    throw new \Exception(sprintf('Found "%s" file endings but we\'ve run out of files!', $fileIndex+1));
-                }
-
-                $filename = $files[$fileIndex];
-                $fileContents[$filename] = $userInput;
-
-                // reset the input, up the file index
-                $userInput = '';
-                $fileIndex++;
-
-            } else {
-                $userInput .= $c;
-                $i--;
-            }
-        }
-
-        // are we returning contents of just one file or many files?
-        return empty($files) ? $userInput : $fileContents;
+        return $this->getPimple()->offsetGet($serviceOrParameterName);
     }
 }
