@@ -179,7 +179,7 @@ class PhpWorker implements WorkerInterface
         $phpFinder = new PhpExecutableFinder();
         $php       = $phpFinder->find();
 
-        // See http://symfony.com/doc/2.2/components/process.html#process-timeout
+        // See http://symfony.com/doc/2.3/components/process.html#process-signals
         // for why exec is used here.
         return new Process(sprintf('exec %s %s/%s', $php, $baseDir, $entryPoint));
     }
