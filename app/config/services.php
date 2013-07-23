@@ -97,11 +97,14 @@ $app['worker.chained'] = $app->share(function ($app) {
 });
 
 $app['worker.php'] = $app->share(function ($app) {
-    return new KnpU\ActivityRunner\Worker\PhpWorker(
+    $worker = new KnpU\ActivityRunner\Worker\PhpWorker(
         $app['filesystem'],
-        $app['php_parser'],
-        $app['worker.time_limit']
+        $app['php_parser']
     );
+
+    $worker->setTimeout($app['worker.time_limit']);
+
+    return $worker;
 });
 
 $app['worker.twig'] = $app->share(function () {
