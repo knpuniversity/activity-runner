@@ -69,6 +69,9 @@ class PathExpanderTest extends \PHPUnit_Framework_TestCase
             $actual[] = (string) $file;
         }
 
+        sort($expected);
+        sort($actual);
+
         $this->assertEquals($expected, $actual);
     }
 
