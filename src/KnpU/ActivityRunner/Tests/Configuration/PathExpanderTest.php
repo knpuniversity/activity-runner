@@ -58,10 +58,18 @@ class PathExpanderTest extends \PHPUnit_Framework_TestCase
             'fileC.txt'
         ));
 
-        $this->assertEquals(array(
+        $expected = array(
             $this->path.'/fileA.php',
             $this->path.'/fileB.php',
-        ), $expander->expand($this->path, 'file*.php'));
+        );
+
+        $actual = array();
+
+        foreach ($expander->expand($this->path, 'file*.php') as $file) {
+            $actual[] = (string) $file;
+        }
+
+        $this->assertEquals($expected, $actual);
     }
 
     public function testExpandTwice()
