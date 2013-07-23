@@ -13,7 +13,7 @@ if (!$app instanceof Application) {
     throw new \LogicExcpetion(sprintf('Expected $app to be an instance of Silex\\Application, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
-$app->get('/check', controller('activity/check'));
+$app->get('/status', controller('activity/status'));
 $app->post('/check', controller('activity/check'));
 
 /**

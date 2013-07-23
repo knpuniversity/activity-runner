@@ -33,4 +33,12 @@ class ActivityController
 
         return (string) $result;
     }
+
+    /**
+     * Used for checking the health of the server.
+     */
+    public function statusAction()
+    {
+        return 'OK';
+    }
 }
