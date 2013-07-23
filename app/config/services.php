@@ -99,7 +99,8 @@ $app['worker.chained'] = $app->share(function ($app) {
 $app['worker.php'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\PhpWorker(
         $app['filesystem'],
-        $app['php_parser']
+        $app['php_parser'],
+        $app['worker.time_limit']
     );
 });
 

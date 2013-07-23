@@ -8,6 +8,7 @@ use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 use KnpU\ActivityRunner\Assert\PhpAwareInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Exception\RuntimeException;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
@@ -27,6 +28,18 @@ class PhpWorker implements WorkerInterface
     protected $parser;
 
     /**
+     * @var string
+     */
+    protected $prefix;
+
+    /**
+     * The maximum amount of time the PHP process can take to execute.
+     *
+     * @var integer
+     */
+    protected $timeout;
+
+    /**
      * @param Filesystem $filesystem
      * @param \PHPParser_Parser $parser
      */
@@ -34,6 +47,29 @@ class PhpWorker implements WorkerInterface
     {
         $this->filesystem = $filesystem;
         $this->parser     = $parser;
+
+        $this->setTimeout();
+        $this->setPrefix();
+    }
+
+    /**
+     * Sets the timeout in seconds.
+     *
+     * @param integer|float $timeout
+     */
+    public function setTimeout($timeout = 0)
+    {
+        $this->timeout = $timeout;
+    }
+
+    /**
+     * Sets the prefix that's used when creating a temporary directory.
+     *
+     * @param string $prefix
+     */
+    public function setPrefix($prefix = 'knpu_php_')
+    {
+        $this->prefix = $prefix;
     }
 
     /**
@@ -47,12 +83,26 @@ class PhpWorker implements WorkerInterface
         $result = new Result();
         $result->setInputFiles($inputFiles);
 
-        $process = $this->execute($inputFiles, $entryPoint);
+        try {
 
-        if ($process->isSuccessful()) {
-            $result->setOutput($process->getOutput());
-        } else {
-            $result->setLanguageError($process->getErrorOutput());
+            $process = $this->execute($inputFiles, $entryPoint);
+
+            if ($process->isSuccessful()) {
+                $result->setOutput($process->getOutput());
+            } else {
+                $result->setLanguageError($process->getErrorOutput());
+            }
+
+        } catch (RuntimeException $e) {
+            // A timeout is not an exceptional case. Since the validation
+            // errors would be overwritten by the asserter, the message has
+            // to be defined as a language error.
+
+            if (strpos($e->getMessage(), 'timed-out') !== false) {
+                $result->setLanguageError('It took too long time to execute your code.');
+            } else {
+                throw $e;
+            }
         }
 
         return $result;
@@ -92,15 +142,26 @@ class PhpWorker implements WorkerInterface
      * @param string $entryPoint
      *
      * @return Process  The process run; can be used to retrieve output
+     *
+     * @throws \Exception if the process fails
+     *
      */
     private function execute(Collection $files, $entryPoint)
     {
         $baseDir = $this->setUp($files, $this->filesystem);
 
         $process = $this->createProcess($baseDir, $entryPoint);
-        $process->run();
+        $process->setTimeout($this->timeout);
+
+        try {
+            $process->run();
+        } catch (\Exception $e) { }
 
         $this->tearDown($baseDir, $this->filesystem);
+
+        if (isset($e)) {
+            throw $e;
+        }
 
         return $process;
     }
@@ -118,7 +179,9 @@ class PhpWorker implements WorkerInterface
         $phpFinder = new PhpExecutableFinder();
         $php       = $phpFinder->find();
 
-        return new Process(sprintf('%s %s/%s', $php, $baseDir, $entryPoint));
+        // See http://symfony.com/doc/2.2/components/process.html#process-timeout
+        // for why exec is used here.
+        return new Process(sprintf('exec %s %s/%s', $php, $baseDir, $entryPoint));
     }
 
     /**
@@ -133,7 +196,7 @@ class PhpWorker implements WorkerInterface
     private function setUp(Collection $files, Filesystem $filesystem)
     {
         do {
-            $baseDir = sys_get_temp_dir().'/knpu_php_'.mt_rand();
+            $baseDir = sys_get_temp_dir().'/'.$this->prefix.mt_rand();
         } while (is_dir($baseDir));
 
         foreach ($files as $path => $contents) {

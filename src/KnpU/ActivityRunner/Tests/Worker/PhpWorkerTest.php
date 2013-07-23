@@ -11,6 +11,13 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class PhpWorkerTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * The prefix used for environments to the /tmp directory.
+     *
+     * @var string
+     */
+    protected $prefix = 'activity_runner_test_';
+
     public function testWorkerExecutesPhpFiles()
     {
         $base = <<<EOD
@@ -32,15 +39,110 @@ EOD;
 
         $activity = $this->getMockActivity($files, 'base.php');
 
-        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
+        $worker = $this->createWorker();
+
         $result = $worker->render($activity);
 
         $this->assertContains('Hello, world!', $result->getOutput());
     }
 
-    public function testSupportsReturnsTrueIfNotPhp()
+    public function testLanguageErrorIfTimeOutReached()
     {
-        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
+        $code  = '<?php while (true);';
+        $files = new ArrayCollection(array('index.php' => $code));
+
+        $activity = $this->getMockActivity($files, 'index.php');
+
+        $worker = $this->createWorker();
+        $worker->setTimeout(0.2);
+
+        $result = $worker->render($activity)->toArray();
+
+        $this->assertContains('too long time', $result['errors']['language']);
+    }
+
+    public function testChildProcessTerminatedIfTimeoutReached()
+    {
+        $code  = '<?php while (true);';
+        $files = new ArrayCollection(array('index.php' => $code));
+
+        $activity = $this->getMockActivity($files, 'index.php');
+
+        $mockFs = $this->getMockFilesystem();
+
+        $mockFs
+            ->expects($this->once())
+            ->method('dumpFile')
+            ->will($this->returnCallback(function ($filename, $content) {
+                $filesystem = new Filesystem();
+                $filesystem->dumpFile($filename, $content);
+            }))
+        ;
+
+        // The critical expectation for this test to pass.
+        $mockFs
+            ->expects($this->once())
+            ->method('remove')
+        ;
+
+        $worker = $this->createWorker($mockFs);
+        $worker->setTimeout(0.2);
+        $worker->render($activity);
+    }
+
+    public function testNoChildProcessesLeftDangling()
+    {
+        $code  = '<?php while (true);';
+        $files = new ArrayCollection(array('index.php' => $code));
+
+        $activity = $this->getMockActivity($files, 'index.php');
+
+        // Search for running processes that have a "activity_runner_test" in it.
+        exec('ps aux | grep [a]ctivity_runner_test', $output);
+        $runningScriptCount = count($output);
+
+        $worker = $this->createWorker();
+        $worker->setTimeout(0.2);
+        $worker->render($activity);
+
+        // The worker should have killed the newly created process. Let's look
+        // at running processes again - we should have exactly the same number
+        // of them as prior to starting the worker.
+        exec('ps aux | grep [a]ctivity_runner_test', $output);
+
+        $this->assertCount($runningScriptCount, $output);
+    }
+
+    /**
+     * @group ini
+     */
+    public function testChangingIniSettingsHasNoEffectOnTimeout()
+    {
+        $code = <<<EOD
+<?php
+
+ini_set('max_execution_time', 2);
+while (true);
+EOD;
+
+        $files = new ArrayCollection(array('index.php' => $code));
+
+        $activity = $this->getMockActivity($files, 'index.php');
+
+
+        $worker = $this->createWorker();
+        $worker->setTimeout(0.2);
+
+        $timeStart = microtime(true);
+        $worker->render($activity);
+        $timeStop = microtime(true);
+
+        $this->assertEquals(0.2, $timeStop - $timeStart, '', 0.05);
+    }
+
+    public function testSupportsReturnsTrueIfPhp()
+    {
+        $worker = $this->createWorker();
 
         $this->assertTrue($worker->supports('foo.php', array()));
     }
@@ -52,7 +154,7 @@ EOD;
      */
     public function testSupportsReturnsFalseIfNotPhp($fileName)
     {
-        $worker = new PhpWorker(new Filesystem(), $this->getMockParser());
+        $worker = $this->createWorker();
 
         $this->assertFalse($worker->supports($fileName, array()));
     }
@@ -65,6 +167,31 @@ EOD;
             array('baz.xml'),
             array('php'),
         );
+    }
+
+    protected function tearDown()
+    {
+        $filesystem  = new Filesystem();
+        $directories = glob(sys_get_temp_dir().'/'.$this->prefix.'*');
+
+        foreach ($directories as $directory) {
+            $filesystem->remove($directory);
+        }
+    }
+
+    /**
+     * Creates a new worker. Used for keeping the tests compact.
+     *
+     * @param Filesystem|null $filesystem
+     *
+     * @return PhpWorker
+     */
+    private function createWorker(Filesystem $filesystem = null)
+    {
+        $worker = new PhpWorker($filesystem ?: new Filesystem(), $this->getMockParser());
+        $worker->setPrefix($this->prefix);
+
+        return $worker;
     }
 
     /**
@@ -90,6 +217,14 @@ EOD;
         ;
 
         return $activity;
+    }
+
+    /**
+     * @return PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockFilesystem()
+    {
+        return $this->getMock('Symfony\\Component\\Filesystem\\Filesystem');
     }
 
     /**
