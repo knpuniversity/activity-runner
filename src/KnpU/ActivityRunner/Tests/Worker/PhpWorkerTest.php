@@ -137,7 +137,7 @@ EOD;
         $worker->render($activity);
         $timeStop = microtime(true);
 
-        $this->assertEquals(0.2, $timeStop - $timeStart, '', 0.05);
+        $this->assertEquals(0.2, $timeStop - $timeStart, '', 0.1);
     }
 
     public function testSupportsReturnsTrueIfPhp()
