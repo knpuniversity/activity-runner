@@ -81,6 +81,27 @@ $app['php_parser'] = $app->share(function () {
     return new \PHPParser_Parser(new \PHPParser_Lexer());
 });
 
+$app['repository.loader'] = $app->share(function ($app) {
+    return $app['repository.loader.cache'];
+});
+
+$app['repository.loader.cache'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Repository\Cache(
+        $app['repository.loader.simple'],
+        $app['repository.naming_strategy']
+    );
+});
+
+$app['repository.loader.simple'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Repository\Loader(
+        $app['repository.naming_strategy']
+    );
+});
+
+$app['repository.naming_strategy'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Repository\Naming\Hyphened($app['courses_path']);
+});
+
 $app['worker_bag'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\WorkerBag(array(
         $app['worker.twig'],
