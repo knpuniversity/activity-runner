@@ -82,6 +82,7 @@ class ActivityRunner
 
         $this->factory->setConfig($config);
         $activity = $this->factory->createActivity($activityName, $inputFiles);
+        $activity->setInputFiles($inputFiles);
 
         $worker = $this->getWorker($config[$activityName]['worker']);
         $result = $worker->render($activity);

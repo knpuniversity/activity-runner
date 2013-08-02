@@ -73,8 +73,6 @@ class ActivityFactory
         $activity->setQuestion($activityConfig['question']);
         $activity->setSkeletons($activityConfig['skeletons']);
 
-        $activity->setInputFiles($inputFiles);
-
         $activity->setEntryPoint($activityConfig['entry_point']);
         $activity->setContext($activityConfig['context']);
         $activity->setSuiteSource($activityConfig['asserts']);
