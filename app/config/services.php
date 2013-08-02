@@ -92,6 +92,14 @@ $app['repository.loader.cache'] = $app->share(function ($app) {
     );
 });
 
+$app['repository.loader.configurator'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Repository\Configurator(
+        $app['repository.loader.cache'],
+        $app['activity_factory'],
+        $app['config_builder']
+    );
+});
+
 $app['repository.loader.simple'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Repository\Loader(
         $app['repository.naming_strategy']
