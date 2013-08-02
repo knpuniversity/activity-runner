@@ -73,8 +73,6 @@ class ActivityFactory
         $activity->setQuestion($activityConfig['question']);
         $activity->setSkeletons($activityConfig['skeletons']);
 
-        // The input files can be set only after the skeletons are set, but must
-        // be set before setting entry_point.
         $activity->setInputFiles($inputFiles);
 
         $activity->setEntryPoint($activityConfig['entry_point']);

@@ -95,17 +95,17 @@ class Activity implements ActivityInterface
     /**
      * @param string $entryPoint
      *
-     * @throws \LogicException if input files have not been set before
-     * @throws \RuntimeException if the entry point file is not one of the input files
+     * @throws \LogicException if skeletons have not been set before
+     * @throws \RuntimeException if the entry point file is not one of the skeleton files
      */
     public function setEntryPoint($entryPoint)
     {
-        if (is_null($this->inputFiles)) {
-            throw new \LogicException('You must first set the input files.');
+        if (is_null($this->skeletonPaths)) {
+            throw new \LogicException('You must first set the skeleton files.');
         }
 
-        if (!$this->inputFiles->containsKey($entryPoint)) {
-            throw new \RuntimeException(sprintf('No file named `%s` found, available files: `%s`', $entryPoint, implode('`, `', $this->inputFiles->getKeys())));
+        if (!isset($this->skeletonPaths[$entryPoint])) {
+            throw new \RuntimeException(sprintf('No file named `%s` found, available files: `%s`', $entryPoint, implode('`, `', array_keys($this->skeletonPaths))));
         }
 
         $this->entryPoint = $entryPoint;
