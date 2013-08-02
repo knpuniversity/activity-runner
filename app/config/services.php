@@ -21,12 +21,8 @@ $app['activity_factory'] = function ($app) {
 $app['activity_runner'] = $app->share(function ($app) {
     $activityRunner = new KnpU\ActivityRunner\ActivityRunner(
         $app['asserter'],
-        $app['config_builder'],
-        $app['activity_factory'],
         $app['worker_bag']
     );
-
-    $activityRunner->setConfigPaths($app['courses_path']);
 
     return $activityRunner;
 });
@@ -82,7 +78,7 @@ $app['php_parser'] = $app->share(function () {
 });
 
 $app['repository.loader'] = $app->share(function ($app) {
-    return $app['repository.loader.cache'];
+    return $app['repository.loader.configurator'];
 });
 
 $app['repository.loader.cache'] = $app->share(function ($app) {

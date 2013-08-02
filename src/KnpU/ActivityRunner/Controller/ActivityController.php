@@ -32,17 +32,17 @@ class ActivityController
     public function checkAction(Request $request, Application $app)
     {
         $activityName = $request->request->get('activity');
-        $inputFiles   = new ArrayCollection($request->request->get('file', array()));
+        $inputFiles = new ArrayCollection($request->request->get('file', array()));
 
         $url = $request->request->get('repository');
         $ref = $request->request->get('ref');
 
         $repository = $app['repository.loader']->load($url, $ref);
 
-        $activityRunner = $app['activity_runner'];
-        $activityRunner->setConfigPaths($repository->getName());
+        $activity = $repository->getActivity($activityName);
+        $activity->setInputFiles($inputFiles);
 
-        $result = $activityRunner->run($activityName, $inputFiles);
+        $result = $app['activity_runner']->run($activity);
         $result->setFormat($request->request->get('output-format', 'yaml'));
 
         return (string) $result;

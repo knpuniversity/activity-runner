@@ -53,14 +53,13 @@ class ActivityFactory
     /**
      * Creates a new activity.
      *
-     * @param string $name            The name of the activity
-     * @param Collection $inputFiles  Input from the user
+     * @param string $name The name of the activity
      *
      * @return ActivityInterface
      *
      * @throws ActivityNotFoundException if no activity was found with the name
      */
-    public function createActivity($name, Collection $inputFiles)
+    public function createActivity($name)
     {
         if (!array_key_exists($name, $this->config)) {
             throw new ActivityNotFoundException($name, array_keys($this->config));
@@ -69,13 +68,12 @@ class ActivityFactory
         $activityConfig = $this->config[$name];
 
         $activity = new Activity($this->classLoader);
-
         $activity->setQuestion($activityConfig['question']);
         $activity->setSkeletons($activityConfig['skeletons']);
-
         $activity->setEntryPoint($activityConfig['entry_point']);
         $activity->setContext($activityConfig['context']);
         $activity->setSuiteSource($activityConfig['asserts']);
+        $activity->setWorkerName($activityConfig['worker']);
 
         return $activity;
     }

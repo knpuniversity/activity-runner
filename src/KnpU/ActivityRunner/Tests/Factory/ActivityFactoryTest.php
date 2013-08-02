@@ -27,9 +27,7 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
         $factory = new ActivityFactory($this->getMockClassLoader());
         $factory->setConfig(array('dummy' => array()));
 
-        $factory->createActivity('missing', new ArrayCollection(array(
-            'foo.html.twig' => 'user input',
-        )));
+        $factory->createActivity('missing');
     }
 
     public function testNewActivityCreation()
@@ -46,9 +44,7 @@ class ActivityFactoryTest extends \PHPUnit_Framework_TestCase
             )
         ));
 
-        $this->assertInstanceOf('KnpU\\ActivityRunner\\Activity', $factory->createActivity('activity_a', new ArrayCollection(
-            array('user input')
-        )));
+        $this->assertInstanceOf('KnpU\\ActivityRunner\\Activity', $factory->createActivity('activity_a'));
     }
 
     public function getMockClassLoader()

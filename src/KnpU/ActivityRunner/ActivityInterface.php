@@ -52,4 +52,11 @@ interface ActivityInterface
      * @return KnpU\ActivityRunner\Assert\AssertSuite
      */
     function getSuite();
+
+    /**
+     * Gets the name of the worker, which should run this activity.
+     *
+     * @return string
+     */
+    function getWorkerName();
 }

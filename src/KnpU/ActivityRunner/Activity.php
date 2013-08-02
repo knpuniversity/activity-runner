@@ -65,6 +65,11 @@ class Activity implements ActivityInterface
     private $suiteSource;
 
     /**
+     * @var string
+     */
+    private $workerName;
+
+    /**
      * @param ClassLoader $classLoader
      */
     public function __construct(ClassLoader $classLoader)
@@ -255,5 +260,23 @@ class Activity implements ActivityInterface
         }
 
         return $this->suite;
+    }
+
+    /**
+     * Sets the worker name, which should run this activity.
+     *
+     * @param string $workerName
+     */
+    public function setWorkerName($workerName)
+    {
+        $this->workerName = $workerName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getWorkerName()
+    {
+        return $this->workerName;
     }
 }
