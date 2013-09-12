@@ -10,10 +10,10 @@ $app = new Application();
 // needs to be set early so we can use it when setting up services
 $app['debug'] = isset($debug) ? $debug : false;
 
+require __DIR__.'/config/parameters_default.php';
+
 if (is_file($paramFile = __DIR__.'/config/parameters.php')) {
     require($paramFile);
-} else {
-    require($paramFile.'.dist');
 }
 
 require(__DIR__.'/config/services.php');
