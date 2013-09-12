@@ -1,11 +1,17 @@
 <?php
 
+use Monolog\Logger;
 
 /** @var $app \Silex\Application */
 if (!$app instanceof \Silex\Application) {
     throw new \LogicException(sprintf('Expected $app to be an instance of \\Pimple, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
+$logFile = $app['debug'] ? 'dev.log' : 'prod.log';
+$app->register(new Silex\Provider\MonologServiceProvider(), array(
+    'monolog.logfile' => __DIR__.'/../logs/'.$logFile,
+    'monolog.level'   => $app['debug'] ? Logger::DEBUG : Logger::CRITICAL,
+));
 
 $app['activity_factory'] = function ($app) {
     return new KnpU\ActivityRunner\Factory\ActivityFactory(
@@ -134,5 +140,11 @@ $app['worker.twig'] = $app->share(function () {
 $app['yaml'] = $app->share(function () {
     return new Symfony\Component\Yaml\Yaml();
 });
+
+$app['logging_exception_listener'] = $app->share(function($app) {
+    return new \KnpU\ActivityRunner\EventListener\LoggingExceptionListener($app['logger']);
+});
+
+$app->error(array($app['logging_exception_listener'], 'onKernelException'));
 
 return $app;
