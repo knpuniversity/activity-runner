@@ -1,16 +1,11 @@
 <?php
 
-// Service definitions. If `$app` is not defined, a new instance of Pimple is
-// created. Alternatively, if the $app is already a Pimple instance, it
-// is used instead.
 
-if (!isset($app)) {
-    $app = new \Pimple();
+/** @var $app \Silex\Application */
+if (!$app instanceof \Silex\Application) {
+    throw new \LogicException(sprintf('Expected $app to be an instance of \\Pimple, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
-if (!$app instanceof \Pimple) {
-    throw new \LogicExcpetion(sprintf('Expected $app to be an instance of \\Pimple, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
-}
 
 $app['activity_factory'] = function ($app) {
     return new KnpU\ActivityRunner\Factory\ActivityFactory(
