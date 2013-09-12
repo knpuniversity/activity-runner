@@ -6,6 +6,10 @@ use Silex\Application;
 
 $app = new Application();
 
+// the front controller should set the $debug flag. This is a hacky way of doing this, but the flag
+// needs to be set early so we can use it when setting up services
+$app['debug'] = isset($debug) ? $debug : false;
+
 if (is_file($paramFile = __DIR__.'/config/parameters.php')) {
     require($paramFile);
 } else {

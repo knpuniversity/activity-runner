@@ -10,6 +10,6 @@ if (!in_array(@$_SERVER['REMOTE_ADDR'], array(
     die('You are not allowed to access this file. Check '.basename(__FILE__).' for more information.');
 }
 
+$debug = true;
 $app = require(__DIR__.'/../app/bootstrap.php');
-$app['debug'] = true;
 $app->run();
