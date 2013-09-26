@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com
@@ -75,13 +76,14 @@ EOD
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $activityName = $input->getArgument('activity');
-        $inputFiles   = $this->getInputFiles(
+
+        $activity = $this->createActivity(
             $activityName,
             $input->getOption('src'),
             $input->getOption('config')
         );
 
-        $result = $this->activityRunner->run($activityName, $inputFiles);
+        $result = $this->activityRunner->run($activity);
         $result->setVerbosity($output->getVerbosity());
         $result->setFormat($input->getOption('output-format') ?: 'yaml');
 
@@ -96,23 +98,17 @@ EOD
         $pimple = $this->getPimple();
         $activityRunner = $pimple['activity_runner'];
 
-        if ($config = $input->getOption('config')) {
-            $activityRunner->setConfigPaths($input->getOption('config'));
-        }
-
         $this->activityRunner = $activityRunner;
     }
 
     /**
-     * @param string $activity               Name of the activity
+     * @param string $activityName           Name of the activity
      * @param string|null $inputsPath        Path to the input files (cwd by default)
      * @param string|array|null $configPath  Paths to the configuration files
-     *
-     * @return ArrayCollection
+     * @return \KnpU\ActivityRunner\ActivityInterface
      */
-    protected function getInputFiles($activity, $inputsPath = null, $configPath = null)
+    protected function createActivity($activityName, $inputsPath = null, $configPath = null)
     {
-        $inputsPath = $inputsPath ?: getcwd();
         $configPath = $configPath ?: $this->get('courses_path');
 
         $configs = $this
@@ -120,23 +116,33 @@ EOD
             ->build($configPath)
         ;
 
-        if (!array_key_exists($activity, $configs)) {
-            throw new ActivityNotFoundException($activity, array_keys($configs));
-        }
+        /** @var \KnpU\ActivityRunner\Factory\ActivityFactory $activityFactory */
+        $activityFactory = $this->getService('activity_factory');
+        $activityFactory->setConfig($configs);
 
+        $activity = $activityFactory->createActivity($activityName);
+
+        /*
+         * This is a bit hacky. Basically, we expect a directory to be passed to this command, full of
+         * files that represent the "input" files (i.e. filled-in skeletons). We just look at these
+         * files here to create an array of paths and content. Later inside, this is used to write these
+         * files again before checking them. So, it's a unnecessarily difficult system where I need
+         * to write these files just to pass them into this task, so that they can be written again.
+         */
+        $inputsPath = $inputsPath ?: getcwd();
+        $finder = new Finder();
+        $finder->in($inputsPath)
+            ->depth('== 0')
+            ->ignoreVCS(true)
+        ;
         $inputFiles = new ArrayCollection();
-
-        foreach (array_keys($configs[$activity]['skeletons']) as $logicalName) {
-            $inputFileName = $inputsPath.'/'.$logicalName;
-
-            if (!is_file($inputFileName)) {
-                throw new FileNotFoundException($inputFileName);
-            }
-
-            $inputFiles->set($logicalName, file_get_contents($inputFileName));
+        foreach ($finder as $file) {
+            /** @var \SplFileInfo $file */
+            $inputFiles[$file->getFilename()] = file_get_contents($file->getPathName());
         }
+        $activity->setInputFiles($inputFiles);
 
-        return $inputFiles;
+        return $activity;
     }
 
     /**

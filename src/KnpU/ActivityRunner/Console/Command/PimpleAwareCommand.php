@@ -30,4 +30,9 @@ abstract class PimpleAwareCommand extends Command implements PimpleAwareInterfac
     {
         return $this->pimple;
     }
+
+    protected function getService($service)
+    {
+        return $this->pimple[$service];
+    }
 }
