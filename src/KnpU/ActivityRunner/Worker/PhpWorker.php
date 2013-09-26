@@ -150,7 +150,7 @@ class PhpWorker implements WorkerInterface
     {
         $baseDir = $this->setUp($files, $this->filesystem);
 
-        $process = $this->createProcess($baseDir, $entryPoint);
+        $process = $this->createProcess($entryPoint);
         $process->setTimeout($this->timeout);
 
         try {
@@ -169,19 +169,18 @@ class PhpWorker implements WorkerInterface
     /**
      * Creates a new PHP process to execute the script.
      *
-     * @param string $baseDir     Base directory
      * @param string $entryPoint  Single point of entry; the file that gets executed
      *
      * @return Process
      */
-    private function createProcess($baseDir, $entryPoint)
+    private function createProcess($entryPoint)
     {
         $phpFinder = new PhpExecutableFinder();
         $php       = $phpFinder->find();
 
         // See http://symfony.com/doc/2.3/components/process.html#process-signals
         // for why exec is used here.
-        return new Process(sprintf('exec %s %s/%s', $php, $baseDir, $entryPoint));
+        return new Process(sprintf('exec %s %s', $php, $entryPoint));
     }
 
     /**
