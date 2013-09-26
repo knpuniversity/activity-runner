@@ -109,7 +109,7 @@ class Activity implements ActivityInterface
             throw new \LogicException('You must first set the skeleton files.');
         }
 
-        if (!isset($this->skeletonPaths[$entryPoint])) {
+        if (!in_array($entryPoint, $this->skeletonPaths)) {
             throw new \RuntimeException(sprintf('No file named `%s` found, available files: `%s`', $entryPoint, implode('`, `', array_keys($this->skeletonPaths))));
         }
 
