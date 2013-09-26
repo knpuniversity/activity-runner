@@ -125,7 +125,7 @@ class Activity implements ActivityInterface
     }
 
     /**
-     * @param string $input
+     * @param Collection $files
      *
      * @throws \RuntimeException if the logical file paths of skeleton files do not match with user input file paths
      */

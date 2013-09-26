@@ -1,6 +1,7 @@
 <?php
 
 namespace KnpU\ActivityRunner;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -21,6 +22,17 @@ interface ActivityInterface
      * @return \Doctrine\Common\Collections\Collection
      */
     function getInputFiles();
+
+    /**
+     * Sets a collection of files
+     *
+     * The files are a key-value with the key being the filename and the
+     * value being the actual contents of that file.
+     *
+     * @param Collection $collection
+     * @return void
+     */
+    function setInputFiles(Collection $collection);
 
     /**
      * Gets an array of key-value pairs defining the current context in which.
