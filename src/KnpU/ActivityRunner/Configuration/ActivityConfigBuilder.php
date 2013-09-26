@@ -213,7 +213,7 @@ class ActivityConfigBuilder
                 // Tries resolvng by seeing if the value is an absolute path to file.
                 $newEntryPoint = $entryPoint;
             } else {
-                throw new \LogicException(sprintf('Failed to resolve entry point `%s`', $entryPoint));
+                throw new \LogicException(sprintf('I can\'t find the "entry_point" file `%s`. Check to make sure this is a real file in the activities directory.', $entryPoint));
             }
 
             $configuration[$activityName]['entry_point'] = $newEntryPoint;
