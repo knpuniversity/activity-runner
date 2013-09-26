@@ -52,6 +52,36 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert
     }
 
     /**
+     * Returns the submitting input
+     *
+     * You can leave filename blank if there is only one file
+     *
+     * @param null|string $filename
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    protected function getInput($filename = null)
+    {
+        $inputs = $this->getActivity()->getInputFiles();
+        if ($filename === null) {
+            if (count($inputs) > 1) {
+                throw new \InvalidArgumentException(sprintf('If your input contains more than 1 file, you must specify the filename.'));
+            }
+
+            return $inputs->first();
+        }
+
+        if (!isset($inputs[$filename])) {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid input file: "%s"',
+                $filename
+            ));
+        }
+
+        return $inputs[$filename];
+    }
+
+    /**
      * @return \Exception|null
      */
     protected function getError()
