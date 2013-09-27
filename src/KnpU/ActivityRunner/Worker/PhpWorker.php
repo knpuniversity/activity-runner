@@ -90,7 +90,16 @@ class PhpWorker implements WorkerInterface
             if ($process->isSuccessful()) {
                 $result->setOutput($process->getOutput());
             } else {
-                $result->setLanguageError($process->getErrorOutput());
+                if ($process->getErrorOutput()) {
+                    $result->setLanguageError($process->getErrorOutput());
+                } else {
+                    // from experience, this could be a failure entirely to execute the entry point
+                    throw new \LogicException(sprintf(
+                        'An error occurred when running "%s": %s',
+                        $process->getCommandLine(),
+                        $process->getOutput()
+                    ));
+                }
             }
 
         } catch (RuntimeException $e) {
