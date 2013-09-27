@@ -6,6 +6,11 @@ use KnpU\ActivityRunner\Assert\AsserterInterface;
 use KnpU\ActivityRunner\Worker\WorkerBag;
 
 /**
+ * Actually executes an Activity and then passes it to the suite for validation
+ *
+ * This relies on "workers" behind the scenes - e.g. there is a different worker for
+ * "php" activities, versus Twig activities, etc.
+ *
  * @author Kristen Gilden <kristen.gilden@gmail.com>
  */
 class ActivityRunner
