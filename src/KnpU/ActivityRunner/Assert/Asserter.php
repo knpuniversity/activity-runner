@@ -4,11 +4,12 @@ namespace KnpU\ActivityRunner\Assert;
 
 use Doctrine\Common\Annotations\Reader;
 use KnpU\ActivityRunner\Assert\Suite\RunIf;
-use KnpU\ActivityRunner\Exception\UnexpectedTypeException;
 use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Result;
 
 /**
+ * Handles executing the "Suite" after an activity has been executed to see if it is correct
+ *
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
  */
 class Asserter implements AsserterInterface

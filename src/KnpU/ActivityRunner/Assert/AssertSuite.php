@@ -58,7 +58,7 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert
      *
      * @param null|string $filename
      * @return string
-     * @throws \InvalidArgumentException
+     * @throws \LogicException
      */
     protected function getInput($filename = null)
     {
@@ -72,9 +72,10 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert
         }
 
         if (!isset($inputs[$filename])) {
-            throw new \InvalidArgumentException(sprintf(
-                'Invalid input file: "%s"',
-                $filename
+            throw new \LogicException(sprintf(
+                'No file named `%s` found as an input file, possible values are: `%s`',
+                $filename,
+                implode('`, `', $inputs->getKeys())
             ));
         }
 

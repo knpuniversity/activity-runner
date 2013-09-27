@@ -23,26 +23,16 @@ abstract class PhpAwareSuite extends AssertSuite implements PhpAwareInterface
     /**
      * Parses an input file given its name.
      *
-     * @param string $fileName
+     * @param string|null $fileName
      *
      * @return \PHPParser_Node[]
      *
      * @throws \LogicException if the parser is not set
      * @throws \LogicException if no such input file exists
      */
-    protected function parsePhp($fileName)
+    protected function parsePhp($fileName = null)
     {
-        $inputFiles = $this->getActivity()->getInputFiles();
-
-        if (!$this->parser) {
-            throw new \LogicException('The parser is not set.');
-        }
-
-        if (!$inputFiles->containsKey($fileName)) {
-            throw new \LogicException(sprintf('No file named `%s` found as an input file, possible values are: `%s`', $fileName, implode('`, `', $inputFiles->getKeys())));
-        }
-
-        return $this->parser->parse($inputFiles->get($fileName));
+        return $this->parser->parse($this->getInput($fileName));
     }
 
     /**
