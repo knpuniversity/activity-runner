@@ -28,17 +28,6 @@ class ActivityTest extends \PHPUnit_Framework_TestCase
         $activity->setSkeletons(array());
     }
 
-    /**
-     * @expectedException KnpU\ActivityRunner\Exception\FileNotFoundException
-     */
-    public function testSetSkeletonsFailsIfPathNotExists()
-    {
-        $activity = new Activity($this->getMockClassLoader());
-        $activity->setSkeletons(array(
-            '/path/to/nonexisting/file',
-        ));
-    }
-
     public function testGetContextReturnsFileReturnValue()
     {
         $contextPath = __DIR__.'/Fixtures/context.php';
@@ -143,7 +132,7 @@ class ActivityTest extends \PHPUnit_Framework_TestCase
         $activity = new Activity($this->getMockClassLoader());
 
         $activity->setSkeletons(array(
-            'foo.html.twig' => self::createTmpFile(),
+            'foo.html.twig' => '/foo/file.html.twig'
         ));
 
         $activity->setInputFiles(new ArrayCollection(array(
@@ -160,8 +149,8 @@ class ActivityTest extends \PHPUnit_Framework_TestCase
         $activity = new Activity($this->getMockClassLoader());
 
         $activity->setSkeletons(array(
-            'foo.html.twig' => self::createTmpFile(),
-            'baz.php'       => self::createTmpFile(),
+            'foo.html.twig' => 'foo.html.twig',
+            'baz.php'       => 'bazfoo.php'
         ));
 
         $activity->setInputFiles(new ArrayCollection(array(

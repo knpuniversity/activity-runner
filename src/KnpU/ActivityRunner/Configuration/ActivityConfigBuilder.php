@@ -92,7 +92,6 @@ class ActivityConfigBuilder
             $configBaseDir = dirname($configPath);
 
             $rawConfig = $this->yaml->parse(file_get_contents($configPath));
-            $rawConfig = $this->resolveEntryPoints($configBaseDir, $rawConfig);
             $rawConfig = $this->resolveRelativePaths($configBaseDir, $rawConfig);
 
             $configs[] = $rawConfig;
@@ -104,8 +103,15 @@ class ActivityConfigBuilder
     }
 
     /**
+     * Certain metadata keys, like "context" and "asserts" represent PHP files that
+     * are *not* sent to this application (as opposed to "skeletons" because when we
+     * run an activity, the user-submitted content for each skeleton is passed to us).
+     *
+     * We need to resolve these keys to absolute paths to these files so that they
+     * can be loaded and used.
+     *
      * Tries to resolve the relative paths given the initial configuration file
-     * loction. It tries to match keys from the specified list and then go
+     * location. It tries to match keys from the specified list and then go
      * through its elements and if a path is relative, it will be turned into
      * an absolute one.
      *
@@ -120,7 +126,7 @@ class ActivityConfigBuilder
      *
      *     // gets turned into:
      *     array(
-     *         'skeletons' => '/base/dir/foo.txt', 'context' => array('/base/dir/baz.txt', '/base/dir/bar.txt'),
+     *         'skeletons' => 'foo.txt', 'context' => array('/base/dir/baz.txt', '/base/dir/bar.txt'),
      *     )
      *
      *     // 2.
@@ -131,7 +137,7 @@ class ActivityConfigBuilder
      *
      *     // gets turned into:
      *     array(
-     *         'random' => array('skeletons' => '/base/dir/foo.txt'),
+     *         'random' => array('skeletons' => 'foo.txt'),
      *         'context' => array('/base/dir/baz.txt', '/base/dir/bar.txt'),
      *     )
      *
@@ -147,13 +153,11 @@ class ActivityConfigBuilder
         // Try to resolve the values of the following keys only. The values may
         // also be arrays in which case they will be iterated over.
         $keys = array(
-            'skeletons',
             'context',
             'asserts',
         );
 
         foreach ($configuration as $key => $paths) {
-
             if (in_array($key, $keys)) {
 
                 // Copy the original value to a temporary one so that we would not
@@ -181,42 +185,6 @@ class ActivityConfigBuilder
                 $configuration[$key] = $this->resolveRelativePaths($baseDir, $paths);
 
             }
-        }
-
-        return $configuration;
-    }
-
-    /**
-     * Attempts to resolve entry points for all activty configurations. The
-     * following rules are applied:
-     *
-     *  +  "foo.html.twig"    - specific skeleton file using its logical name;
-     *  +  "path/to/file.php" - relative (or absolute) path to the entry point;
-     *
-     * @param string $baseDir
-     * @param array $configuration
-     *
-     * @return array
-     */
-    protected function resolveEntryPoints($baseDir, array $configuration)
-    {
-        foreach ($configuration as $activityName => $activityConfig) {
-            $entryPoint = $activityConfig['entry_point'];
-
-            if (isset($activityConfig['skeletons'][$entryPoint])) {
-                // Tries resolving by seeing if such a key exists in the skeleton.
-                $newEntryPoint = $entryPoint;
-            } else if (is_file($baseDir.'/'.$entryPoint)) {
-                // Tries resolving by seeing if the value is a relative path to file.
-                $newEntryPoint = $baseDir.'/'.$entryPoint;
-            } else if (substr($entryPoint, 0, 1) === '/' && is_file($entryPoint)) {
-                // Tries resolvng by seeing if the value is an absolute path to file.
-                $newEntryPoint = $entryPoint;
-            } else {
-                throw new \LogicException(sprintf('I can\'t find the "entry_point" file `%s`. Check to make sure this is a real file in the activities directory.', $entryPoint));
-            }
-
-            $configuration[$activityName]['entry_point'] = $newEntryPoint;
         }
 
         return $configuration;

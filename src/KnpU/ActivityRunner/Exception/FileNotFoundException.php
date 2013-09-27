@@ -8,10 +8,17 @@ namespace KnpU\ActivityRunner\Exception;
 class FileNotFoundException extends \RuntimeException
 {
     /**
-     * @param string $filePath
+     * @param string $path
+     * @param string|null $message
      */
-    public function __construct($path)
+    public function __construct($path, $message = null)
     {
-        parent::__construct(sprintf('The file "%s" does not exist', $path));
+        if ($message) {
+            $msg = sprintf('%s: "%s"', $message, $path);
+        } else {
+            $msg = sprintf('The file "%s" does not exist', $path);
+        }
+
+        parent::__construct($msg);
     }
 }

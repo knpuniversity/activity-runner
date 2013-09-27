@@ -6,7 +6,6 @@ use Doctrine\Common\Collections\Collection;
 use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\ClassLoader;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
-use KnpU\ActivityRunner\Exception\SkeletonNotFoundException;
 use KnpU\ActivityRunner\Exception\UnexpectedTypeException;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 
@@ -52,7 +51,7 @@ class Activity implements ActivityInterface
     /**
      * @var array
      */
-    private $skeletonPaths;
+    private $skeletons;
 
     /**
      * @var AssertSuite
@@ -78,23 +77,27 @@ class Activity implements ActivityInterface
     }
 
     /**
-     * Specifies the location of skeleton files.
+     * An array of "skeleton" files:
      *
-     * @param array $filePaths  List of paths to skeleton files
+     * array(
+     *     "Logical name" => "Path to file"
+     *     'index.php' => 'SetVar2/index.php'
+     * )
+     *
+     * The "Logical" name is what the file will be named when it's submitted
+     * for grading (and it's also what we show to the user).
+     *
+     * @param array $skeletons
+     * @throws Exception\FileNotFoundException
+     * @throws \InvalidArgumentException
      */
-    public function setSkeletons(array $filePaths)
+    public function setSkeletons(array $skeletons)
     {
-        if (empty($filePaths)) {
+        if (empty($skeletons)) {
             throw new \InvalidArgumentException('You must provide at least 1 skeleton file.');
         }
 
-        foreach ($filePaths as $filePath) {
-            if (!is_file($filePath)) {
-                throw new FileNotFoundException($filePath);
-            }
-        }
-
-        $this->skeletonPaths = $filePaths;
+        $this->skeletons = $skeletons;
     }
 
     /**
@@ -105,12 +108,12 @@ class Activity implements ActivityInterface
      */
     public function setEntryPoint($entryPoint)
     {
-        if (is_null($this->skeletonPaths)) {
+        if (is_null($this->skeletons)) {
             throw new \LogicException('You must first set the skeleton files.');
         }
 
-        if (!in_array($entryPoint, $this->skeletonPaths)) {
-            throw new \RuntimeException(sprintf('No file named `%s` found, available files: `%s`', $entryPoint, implode('`, `', array_keys($this->skeletonPaths))));
+        if (!isset($this->skeletons[$entryPoint])) {
+            throw new \RuntimeException(sprintf('No file named `%s` found, available files: `%s`', $entryPoint, implode('`, `', array_keys($this->skeletons))));
         }
 
         $this->entryPoint = $entryPoint;
@@ -131,7 +134,7 @@ class Activity implements ActivityInterface
      */
     public function setInputFiles(Collection $files)
     {
-        $allowedPaths = array_keys($this->skeletonPaths);
+        $allowedPaths = array_keys($this->skeletons);
         $actualPaths  = $files->getKeys();
 
         if (($diff = array_diff($allowedPaths, $actualPaths)) ||
@@ -161,8 +164,8 @@ class Activity implements ActivityInterface
      */
     public function setContext($filePath)
     {
-        if (!is_file($filePath)) {
-            throw new FileNotFoundException($filePath);
+        if ($filePath && !is_file($filePath)) {
+            throw new FileNotFoundException($filePath, 'Cannot find the "context" file');
         }
 
         $this->contextPath = $filePath;
