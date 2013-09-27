@@ -39,20 +39,6 @@ class ActivityTest extends \PHPUnit_Framework_TestCase
         ));
     }
 
-    public function testReadingSkeletonFiles()
-    {
-        $physicalPath = __DIR__.'/Fixtures/skeleton.html.twig';
-        $logicalPath  = 'src/Foo/Baz/test.html.twig';
-
-        $activity = new Activity($this->getMockClassLoader());
-        $activity->setSkeletons(array($logicalPath => $physicalPath));
-
-        $expected = file_get_contents($physicalPath);
-        $actual   = $activity->getSkeletonContents($logicalPath);
-
-        $this->assertEquals($expected, $actual);
-    }
-
     public function testGetContextReturnsFileReturnValue()
     {
         $contextPath = __DIR__.'/Fixtures/context.php';

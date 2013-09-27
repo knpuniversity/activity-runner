@@ -50,15 +50,6 @@ interface ActivityInterface
     function getQuestion();
 
     /**
-     * Gets the file contents of the specified skeleton.
-     *
-     * @param string $logicalName  Logical name of a skeleton file (e.g. `foo.html.twig`)
-     *
-     * @return string
-     */
-    function getSkeletonContents($logicalName);
-
-    /**
      * Gets the assert suite.
      *
      * @return KnpU\ActivityRunner\Assert\AssertSuite

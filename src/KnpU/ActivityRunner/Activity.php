@@ -213,18 +213,6 @@ class Activity implements ActivityInterface
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function getSkeletonContents($logicalName)
-    {
-        if (!isset($this->skeletonPaths[$logicalName])) {
-            throw new SkeletonNotFoundException($logicalName, array_keys($this->skeletonPaths));
-        }
-
-        return file_get_contents($this->skeletonPaths[$logicalName]);
-    }
-
-    /**
      * Sets the suite source. The source can either be a FQCN or absolute path
      * to the class file. In both cases the classes must inherit from
      * `KnpU\ActivityRunner\Assert\AssertSuite`.
