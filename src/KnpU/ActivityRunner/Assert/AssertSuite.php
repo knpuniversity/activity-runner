@@ -21,11 +21,6 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert
     private $output;
 
     /**
-     * @var \Exception
-     */
-    private $error;
-
-    /**
      * @return ActivityInterface
      */
     protected function getActivity()
@@ -80,13 +75,5 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert
         }
 
         return $inputs[$filename];
-    }
-
-    /**
-     * @return \Exception|null
-     */
-    protected function getError()
-    {
-        return $this->error;
     }
 }
