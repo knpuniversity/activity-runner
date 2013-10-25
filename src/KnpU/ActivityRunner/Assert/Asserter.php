@@ -68,30 +68,25 @@ class Asserter implements AsserterInterface
             return $cachedFailures;
         }
 
-        $this->setSuiteInternals($suite, $activity, $result->getOutput());
+        $test = new \ReflectionMethod($suite, 'runTest');
+        $annotation = $this->annotationsReader->getMethodAnnotation($test, 'KnpU\\ActivityRunner\\Assert\\Suite\\RunIf');
+
+        if (!$annotation) {
+            $annotation = $this->defaultAnnotation;
+        }
+
+        if (!$annotation->isAllowedToRun($result)) {
+            return array();
+        }
 
         $failures = array();
 
-        /** @var $test \ReflectionMethod */
-        foreach ($this->getSuiteTests($suite) as $test) {
-
-            $annotation = $this->annotationsReader->getMethodAnnotation($test, 'KnpU\\ActivityRunner\\Assert\\Suite\\RunIf');
-
-            if (!$annotation) {
-                $annotation = $this->defaultAnnotation;
-            }
-
-            if (!$annotation->isAllowedToRun($result)) {
-                continue;
-            }
-
-            try {
-                $test->invoke($suite, array());
-            } catch (\PHPUnit_Framework_AssertionFailedError $e) {
-                $failures[] = $e->getMessage();
-            } catch (\PHPParser_Error $e) {
-                $failures[] = $e->getMessage();
-            }
+        try {
+            $test->invoke($suite, $result);
+        } catch (\PHPUnit_Framework_AssertionFailedError $e) {
+            $failures[] = $e->getMessage();
+        } catch (\PHPParser_Error $e) {
+            $failures[] = $e->getMessage();
         }
 
         $this->cacheFailures($suite, $result->getOutput(), $failures);
@@ -102,7 +97,7 @@ class Asserter implements AsserterInterface
     /**
      * Finds all public methods from the suite prefixed with `test`.
      *
-     * @param AssertSuite $suite
+     * @param AssertSuiteInterface $suite
      *
      * @return \ReflectionMethod[]
      */
@@ -123,12 +118,12 @@ class Asserter implements AsserterInterface
     }
 
     /**
-     * @param AssertSuite $suite
+     * @param AssertSuiteInterface $suite
      * @param string $output
      *
      * @return array|null  Cached failures or null indicating that the failures have not been cached
      */
-    private function getCachedFailures(AssertSuite $suite, $output)
+    private function getCachedFailures(AssertSuiteInterface $suite, $output)
     {
         $suiteHash  = spl_object_hash($suite);
         $outputHash = crc32($output);
@@ -139,11 +134,11 @@ class Asserter implements AsserterInterface
     }
 
     /**
-     * @param AssertSuite $suite
+     * @param AssertSuiteInterface $suite
      * @param string $output
      * @param array $failures
      */
-    private function cacheFailures(AssertSuite $suite, $output, array $failures)
+    private function cacheFailures(AssertSuiteInterface $suite, $output, array $failures)
     {
         $suiteHash  = spl_object_hash($suite);
         $outputHash = crc32($output);
@@ -153,37 +148,5 @@ class Asserter implements AsserterInterface
         }
 
         $this->cachedResults[$suiteHash][$outputHash] = $failures;
-    }
-
-    /**
-     * Sets internal suite properties using reflection.
-     *
-     * @param AssertSuite $suite
-     * @param ActivityInterface $activity
-     * @param string $output
-     *
-     * @throws \LogicException
-     */
-    private function setSuiteInternals(AssertSuite $suite, ActivityInterface $activity, $output)
-    {
-        $reflSuite = new \ReflectionClass($suite);
-
-        while ($reflSuite = $reflSuite->getParentClass()) {
-            if ('KnpU\\ActivityRunner\\Assert\\AssertSuite' === $reflSuite->getName()) {
-                break;
-            }
-        }
-
-        if (!$reflSuite) {
-            throw new \LogicException('Suite does not seem to be extending from `AssertSuite`, but that\'s impossible because of the method type hint.');
-        }
-
-        $activityProperty = $reflSuite->getProperty('activity');
-        $activityProperty->setAccessible(true);
-        $activityProperty->setValue($suite, $activity);
-
-        $outputProperty = $reflSuite->getProperty('output');
-        $outputProperty->setAccessible(true);
-        $outputProperty->setValue($suite, $output);
     }
 }

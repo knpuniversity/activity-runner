@@ -4,6 +4,7 @@ namespace KnpU\ActivityRunner;
 
 use Doctrine\Common\Collections\Collection;
 use KnpU\ActivityRunner\ActivityInterface;
+use KnpU\ActivityRunner\Assert\AssertSuiteInterface;
 use KnpU\ActivityRunner\Assert\ClassLoader;
 use KnpU\ActivityRunner\Exception\FileNotFoundException;
 use KnpU\ActivityRunner\Exception\UnexpectedTypeException;
@@ -243,8 +244,8 @@ class Activity implements ActivityInterface
 
             $suite = new $suiteClass();
 
-            if (!($suite instanceof AssertSuite)) {
-                throw new UnexpectedTypeException($suiteClass, 'KnpU\\ActivityRunner\\Assert\\AssertSuite');
+            if (!($suite instanceof AssertSuiteInterface)) {
+                throw new UnexpectedTypeException($suiteClass, 'KnpU\\ActivityRunner\\Assert\\AssertSuiteInterface');
             }
 
             $this->suite = $suite;

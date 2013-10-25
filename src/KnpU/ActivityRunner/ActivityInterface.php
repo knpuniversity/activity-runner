@@ -52,7 +52,7 @@ interface ActivityInterface
     /**
      * Gets the assert suite.
      *
-     * @return KnpU\ActivityRunner\Assert\AssertSuite
+     * @return \KnpU\ActivityRunner\Assert\AssertSuiteInterface
      */
     function getSuite();
 
