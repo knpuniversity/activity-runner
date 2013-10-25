@@ -4,8 +4,6 @@ namespace KnpU\ActivityRunner;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -32,21 +30,10 @@ class Result
      */
     protected $languageError;
 
-    /**
-     * @var integer
-     */
-    protected $verbosity;
-
-    /**
-     * @var string
-     */
-    protected $format;
-
     public function __construct($output = '')
     {
         $this->inputFiles = new ArrayCollection();
         $this->output = $output;
-        $this->verbosity = OutputInterface::VERBOSITY_NORMAL;
     }
 
     /**
@@ -63,6 +50,37 @@ class Result
     public function getInputFiles()
     {
         return $this->inputFiles;
+    }
+
+    /**
+     * Returns the submitting input
+     *
+     * You can leave filename blank if there is only one file
+     *
+     * @param null|string $filename
+     * @return string
+     * @throws \LogicException
+     */
+    public function getInput($filename = null)
+    {
+        $inputs = $this->getInputFiles();
+        if ($filename === null) {
+            if (count($inputs) > 1) {
+                throw new \InvalidArgumentException(sprintf('If your input contains more than 1 file, you must specify the filename.'));
+            }
+
+            return $inputs->first();
+        }
+
+        if (!isset($inputs[$filename])) {
+            throw new \LogicException(sprintf(
+                'No file named `%s` found as an input file, possible values are: `%s`',
+                $filename,
+                implode('`, `', $inputs->getKeys())
+            ));
+        }
+
+        return $inputs[$filename];
     }
 
     /**
@@ -86,23 +104,21 @@ class Result
      */
     public function setValidationErrors(array $validationErrors)
     {
-        if ($this->verbosity <= OutputInterface::VERBOSITY_NORMAL) {
-            // Remove PHPUnit generated automatic 'Failed asserting that ...'
-            // validation messages. I tried using composer to override
-            // PHPUnit_Framework_Constraint and implement our own version of
-            // the `fail` method, but some constraints implement their own
-            // version of it, so that solution would have been even dirtier.
+        // Remove PHPUnit generated automatic 'Failed asserting that ...'
+        // validation messages. I tried using composer to override
+        // PHPUnit_Framework_Constraint and implement our own version of
+        // the `fail` method, but some constraints implement their own
+        // version of it, so that solution would have been even dirtier.
 
-            $pattern = "\nFailed asserting that";
+        $pattern = "\nFailed asserting that";
 
-            foreach ($validationErrors as $key => $validationError) {
-                $endPos = strrpos($validationError, $pattern);
+        foreach ($validationErrors as $key => $validationError) {
+            $endPos = strrpos($validationError, $pattern);
 
-                // Only removes the text, if its not the only part of the
-                // validation error message.
-                if (false !== $endPos && 0 !== $endPos) {
-                    $validationErrors[$key] = substr($validationError, 0, $endPos);
-                }
+            // Only removes the text, if its not the only part of the
+            // validation error message.
+            if (false !== $endPos && 0 !== $endPos) {
+                $validationErrors[$key] = substr($validationError, 0, $endPos);
             }
         }
 
@@ -123,36 +139,6 @@ class Result
     public function hasLanguageError()
     {
         return (boolean) $this->languageError;
-    }
-
-    /**
-     * @param integer $verbosity
-     */
-    public function setVerbosity($verbosity)
-    {
-        if (OutputInterface::VERBOSITY_QUIET > $verbosity) {
-            throw new \InvalidArgumentException(sprintf("Got unknown verbosity level %s, expected it to be more than %d.", $verbosity, OutputInterface::VERBOSITY_QUIET));
-        }
-
-        $this->verbosity = $verbosity;
-    }
-
-    /**
-     * @param string $format
-     */
-    public function setFormat($format)
-    {
-        $allowed = array(
-            'yaml',
-            'array',
-            'json',
-        );
-
-        if (!in_array($format, $allowed)) {
-            throw new \InvalidArgumentException(sprintf("The `%s` format is not supported, but the following are: `%s`.", $format, implode('`, `', $allowed)));
-        }
-
-        $this->format = $format;
     }
 
     /**
@@ -187,26 +173,13 @@ class Result
     public function __toString()
     {
         $result     = $this->toArray();
-        $outputText = '';
 
-        switch ($this->format) {
-            case 'yaml':
-                $outputText = Yaml::dump($result);
-                break;
-            case 'array':
-                $outputText = print_r($result, true);
-                break;
-            case 'json':
-                $options = 0;
+        $options = 0;
 
-                if (defined('JSON_PRETTY_PRINT')) {
-                    $options |= JSON_PRETTY_PRINT;
-                }
-
-                $outputText = json_encode($result, $options);
-                break;
+        if (defined('JSON_PRETTY_PRINT')) {
+            $options |= JSON_PRETTY_PRINT;
         }
 
-        return $outputText;
+        return json_encode($result, $options);
     }
 }

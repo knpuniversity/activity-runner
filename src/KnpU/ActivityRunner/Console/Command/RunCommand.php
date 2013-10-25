@@ -84,8 +84,6 @@ EOD
         );
 
         $result = $this->activityRunner->run($activity);
-        $result->setVerbosity($output->getVerbosity());
-        $result->setFormat($input->getOption('output-format') ?: 'yaml');
 
         $output->write((string) $result);
     }
