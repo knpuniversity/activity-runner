@@ -38,7 +38,7 @@ class ActivityConfigurationTest extends \PHPUnit_Framework_TestCase
      *
      * @param string $missingKey
      */
-    public function testDefaults($missingKey)
+    public function testDefaults($missingKey, $defaultValue = null)
     {
         $rawConfig = array(
             'activities' => array(
@@ -58,14 +58,18 @@ class ActivityConfigurationTest extends \PHPUnit_Framework_TestCase
         $activities = $this->process($rawConfig);
 
         $this->assertArrayHasKey($missingKey, $activities['act_a']);
-        $this->assertNotEmpty($activities['act_a'][$missingKey]);
+        if ($defaultValue === null) {
+            $this->assertNotEmpty($activities['act_a'][$missingKey]);
+        } else {
+            $this->assertEquals($defaultValue, $activities['act_a'][$missingKey]);
+        }
     }
 
     public function defaultKeyProvider()
     {
         return array(
             array('skeletons'),
-            array('context'),
+            array('context', false),
             array('asserts'),
         );
     }
