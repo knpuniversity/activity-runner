@@ -3,9 +3,9 @@
 namespace KnpU\ActivityRunner\Controller;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use KnpU\ActivityRunner\ActivityInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
+use KnpU\ActivityRunner\Repository\Repository;
 
 /**
  * @author Kristen Gilden <kristen.gilden@gmail.com>
@@ -37,13 +37,13 @@ class ActivityController
         $url = $request->request->get('repository');
         $ref = $request->request->get('ref');
 
+        /** @var Repository $repository */
         $repository = $app['repository.loader']->load($url, $ref);
 
         $activity = $repository->getActivity($activityName);
         $activity->setInputFiles($inputFiles);
 
         $result = $app['activity_runner']->run($activity);
-        $result->setFormat($request->request->get('output-format', 'yaml'));
 
         return (string) $result;
     }
