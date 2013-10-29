@@ -13,6 +13,11 @@ abstract class PhpAwareSuite extends AssertSuite implements PhpAwareInterface
     protected $parser;
 
     /**
+     * @var array A cache of the parsed PHP statements
+     */
+    protected $parsedPhpStatements = array();
+
+    /**
      * {@inheritDoc}
      */
     public function setParser(\PHPParser_Parser $parser)
@@ -23,16 +28,21 @@ abstract class PhpAwareSuite extends AssertSuite implements PhpAwareInterface
     /**
      * Parses an input file given its name.
      *
-     * @param string|null $fileName
+     * @param string $contents
      *
      * @return \PHPParser_Node[]
      *
      * @throws \LogicException if the parser is not set
      * @throws \LogicException if no such input file exists
      */
-    protected function parsePhp($fileName = null)
+    protected function getPhpNodeTree($contents)
     {
-        return $this->parser->parse($this->getInput($fileName));
+        $key = sha1($contents);
+        if (!isset($this->parsedPhpStatements[$contents])) {
+            $this->parsedPhpStatements[$key] = $this->parser->parse($contents);
+        }
+
+        return $this->parsedPhpStatements[$contents];
     }
 
     /**

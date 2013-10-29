@@ -3,7 +3,7 @@
 namespace KnpU\ActivityRunner\PhpParser\Visitor;
 
 /**
- * The class Filter visitor returns all class decarations found in the code. If
+ * The class Filter visitor returns all class declarations found in the code. If
  * the optional `$className` argument is passed, the visitor looks for the class
  * declaration that matches this specific name.
  *

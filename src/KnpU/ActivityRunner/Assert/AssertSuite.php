@@ -42,11 +42,11 @@ abstract class AssertSuite extends \PHPUnit_Framework_Assert implements AssertSu
     /**
      * Creates a Symfony crawler.
      *
-     * @param Result $result
+     * @param string $output
      * @return Crawler
      */
-    protected function getCrawler(Result $result)
+    protected function getCrawler($output)
     {
-        return new Crawler($result->getOutput());
+        return new Crawler($output);
     }
 }
