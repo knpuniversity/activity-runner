@@ -28,6 +28,7 @@ class ActivityController
      *
      * @param Request $request
      * @param Application $app
+     * @return string
      */
     public function checkAction(Request $request, Application $app)
     {
