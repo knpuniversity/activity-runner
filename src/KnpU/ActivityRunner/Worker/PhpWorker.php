@@ -39,6 +39,8 @@ class PhpWorker implements WorkerInterface
      */
     protected $timeout;
 
+    private $currentBaseDir;
+
     /**
      * @param Filesystem $filesystem
      * @param \PHPParser_Parser $parser
@@ -94,11 +96,23 @@ class PhpWorker implements WorkerInterface
                     $result->setLanguageError($process->getErrorOutput());
                 } else {
                     // from experience, this could be a failure entirely to execute the entry point
-                    throw new \LogicException(sprintf(
-                        'An error occurred when running "%s": %s',
-                        $process->getCommandLine(),
-                        $process->getOutput()
-                    ));
+                    // or it could be a parse error
+                    // if it were the former, we should throw a large exception to help debugging
+                    // but if it's a parse error, we should set it
+                    // unfortunately, I'm not sure if we can really be sure which it is for now
+//                    throw new \LogicException(sprintf(
+//                        'An error occurred when running "%s": %s',
+//                        $process->getCommandLine(),
+//                        $process->getOutput()
+//                    ));
+
+                    // todo - this is not working if the directory is in a symlink for some reason
+                    // realpath returns false - the path gets messed up (at least in my computer)
+                    // but I'm leaving this, because I think it'll work on a system where /tmp is not a symlink
+                    $output = $process->getOutput();
+                    str_replace($this->currentBaseDir, '', $output);
+
+                    $result->setLanguageError($output.$this->currentBaseDir);
                 }
             }
 
@@ -157,16 +171,16 @@ class PhpWorker implements WorkerInterface
      */
     private function execute(Collection $files, $entryPoint)
     {
-        $baseDir = $this->setUp($files, $this->filesystem);
+        $this->currentBaseDir = $this->setUp($files, $this->filesystem);
 
-        $process = $this->createProcess($baseDir, $entryPoint);
+        $process = $this->createProcess($this->currentBaseDir, $entryPoint);
         $process->setTimeout($this->timeout);
 
         try {
             $process->run();
         } catch (\Exception $e) { }
 
-        $this->tearDown($baseDir, $this->filesystem);
+        $this->tearDown($this->currentBaseDir, $this->filesystem);
 
         if (isset($e)) {
             throw $e;
@@ -205,7 +219,7 @@ class PhpWorker implements WorkerInterface
     private function setUp(Collection $files, Filesystem $filesystem)
     {
         do {
-            $baseDir = sys_get_temp_dir().'/'.$this->prefix.mt_rand();
+            $baseDir = sys_get_temp_dir().$this->prefix.mt_rand();
         } while (is_dir($baseDir));
 
         foreach ($files as $path => $contents) {
