@@ -112,7 +112,7 @@ class PhpWorker implements WorkerInterface
                     $output = $process->getOutput();
                     str_replace($this->currentBaseDir, '', $output);
 
-                    $result->setLanguageError($output.$this->currentBaseDir);
+                    $result->setLanguageError($output);
                 }
             }
 
