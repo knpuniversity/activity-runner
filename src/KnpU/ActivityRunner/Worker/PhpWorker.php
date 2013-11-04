@@ -219,7 +219,7 @@ class PhpWorker implements WorkerInterface
     private function setUp(Collection $files, Filesystem $filesystem)
     {
         do {
-            $baseDir = sys_get_temp_dir().$this->prefix.mt_rand();
+            $baseDir = sys_get_temp_dir().'/'.$this->prefix.mt_rand();
         } while (is_dir($baseDir));
 
         foreach ($files as $path => $contents) {
