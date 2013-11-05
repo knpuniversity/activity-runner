@@ -87,9 +87,6 @@ class Asserter implements AsserterInterface
             $failures[] = $e->getMessage();
         } catch (\PHPParser_Error $e) {
             $failures[] = $e->getMessage();
-        } catch (\Exception $e) {
-            // sometimes you may choose just to throw an exception to show a failure
-            $failures[] = $e->getMessage();
         }
 
         $this->cacheFailures($suite, $result->getOutput(), $failures);
