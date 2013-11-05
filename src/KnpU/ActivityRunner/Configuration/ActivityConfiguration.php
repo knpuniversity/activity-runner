@@ -22,6 +22,8 @@ class ActivityConfiguration implements ConfigurationInterface
             ->useAttributeAsKey('name')
             ->prototype('array')
                 ->children()
+                    // actually added by us manually
+                    ->scalarNode('base_dir')->end()
                     ->scalarNode('question')->end()
                     ->arrayNode('skeletons')
                         ->cannotBeEmpty()

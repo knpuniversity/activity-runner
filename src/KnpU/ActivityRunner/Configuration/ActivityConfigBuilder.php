@@ -94,6 +94,14 @@ class ActivityConfigBuilder
             $rawConfig = $this->yaml->parse(file_get_contents($configPath));
             $rawConfig = $this->resolveRelativePaths($configBaseDir, $rawConfig);
 
+            // a bit hacky - KnpU needs to know the base dir in order to reverse and go back
+            // to the raw, non-absolute values. This really needs to be re-thought and we
+            // should be returning an object, not a big array
+            foreach ($rawConfig as $key => $activityData) {
+                // store the base dir, which may be useful by whatever is using this
+                $rawConfig[$key]['base_dir'] = $configBaseDir;
+            }
+
             $configs[] = $rawConfig;
         }
 
