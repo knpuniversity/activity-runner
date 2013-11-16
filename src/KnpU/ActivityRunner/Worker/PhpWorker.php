@@ -204,7 +204,8 @@ class PhpWorker implements WorkerInterface
 
         // See http://symfony.com/doc/2.3/components/process.html#process-signals
         // for why exec is used here.
-        return new Process(sprintf('exec %s %s/%s', $php, $baseDir, $entryPoint));
+        // notice we move into the directory, so that paths are relative
+        return new Process(sprintf('cd %s; exec %s %s', $baseDir, $php, $entryPoint));
     }
 
     /**
