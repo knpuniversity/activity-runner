@@ -2,11 +2,15 @@
     "name": "knpuniversity/activity-runner",
     "type": "library",
     "description": "Executes Twig & PHP activities in a safe manner",
-    "licence": "MIT",
+    "license": "MIT",
     "authors": [
         {
             "name": "Kristen Gilden",
             "email": "kristen.gilden@knplabs.com"
+        },
+        {
+            "name": "KnpUniversity",
+            "email": "hello@knpuniversity.com"
         }
     ],
     "require": {
@@ -29,6 +33,11 @@
         "psr-0": {
             "KnpU\\ActivityRunner": "src",
             "KnpU\\ActivityRunner\\Tests": "tests"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.x-dev"
         }
     }
 }
