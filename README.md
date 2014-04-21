@@ -27,6 +27,9 @@ Use the `create-project` command of composer:
 
     $ php composer.phar create-project knpuniversity/activity-runner my/path 0.1.0
 
+Ensure that `app/cache`, `app/logs` **and** `app/courses` directories exist and are writable.
+If you're unsure on how to do that, consult `Setting up Permissions` section of [Symfony2 documentation](http://symfony.com/doc/2.0/book/installation.html)
+
 ### Inclusion as a library
 
 Simply add Activity Runner in your `composer.json`:
