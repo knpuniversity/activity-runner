@@ -130,13 +130,18 @@ EOD
         $inputsPath = $inputsPath ?: getcwd();
         $finder = new Finder();
         $finder->in($inputsPath)
-            ->depth('== 0')
+            ->files()
             ->ignoreVCS(true)
         ;
         $inputFiles = new ArrayCollection();
         foreach ($finder as $file) {
             /** @var \SplFileInfo $file */
-            $inputFiles[$file->getFilename()] = file_get_contents($file->getPathName());
+            // get something like layout/header.php
+            $relativePath = str_replace($inputsPath, '', $file->getPathname());
+            // strip off the opening slash
+            $relativePath = trim($relativePath, '/');
+
+            $inputFiles[$relativePath] = file_get_contents($file->getPathName());
         }
         $activity->setInputFiles($inputFiles);
 
