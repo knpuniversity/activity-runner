@@ -8,6 +8,7 @@ use KnpU\ActivityRunner\ActivityInterface;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 use KnpU\ActivityRunner\Assert\PhpAwareInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Exception\RuntimeException;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -88,7 +89,7 @@ class PhpWorker implements WorkerInterface
 
         try {
 
-            $process = $this->execute($inputFiles, $entryPoint, $beforeExecute);
+            $process = $this->execute($inputFiles, $entryPoint, $beforeExecute, $result);
 
             if ($process->isSuccessful()) {
                 $result->setOutput($process->getOutput());
@@ -165,13 +166,14 @@ class PhpWorker implements WorkerInterface
      * @param Collection $files
      * @param string $entryPoint
      * @param string $beforeExecute
+     * @param Result $result
      *
      * @return Process  The process run; can be used to retrieve output
      *
      * @throws \Exception if the process fails
      *
      */
-    private function execute(Collection $files, $entryPoint, $beforeExecute)
+    private function execute(Collection $files, $entryPoint, $beforeExecute, Result $result)
     {
         $this->currentBaseDir = $this->setUp($files, $this->filesystem);
 
@@ -192,6 +194,24 @@ class PhpWorker implements WorkerInterface
         try {
             $process->run();
         } catch (\Exception $e) { }
+
+        // add in all the finished contents of the directory
+        $finder = new Finder();
+        $finder->in($this->currentBaseDir)
+            ->files()
+            ->ignoreVCS(true)
+        ;
+        $finalContents = array();
+        foreach ($finder as $file) {
+            /** @var \SplFileInfo $file */
+            // get something like layout/header.php
+            $relativePath = str_replace($this->currentBaseDir, '', $file->getPathname());
+            // strip off the opening slash
+            $relativePath = trim($relativePath, '/');
+
+            $finalContents[$relativePath] = file_get_contents($file->getPathname());
+        }
+        $result->setFinalFileContents($finalContents);
 
         $this->tearDown($this->currentBaseDir, $this->filesystem);
 

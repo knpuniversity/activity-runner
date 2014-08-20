@@ -30,6 +30,15 @@ class Result
      */
     protected $languageError;
 
+    /**
+     * Key-value of what files look like after running the process
+     *
+     * This is useful if the script writes to some files
+     *
+     * @var array
+     */
+    protected $finalFileContents = array();
+
     public function __construct($output = '')
     {
         $this->inputFiles = new ArrayCollection();
@@ -181,5 +190,21 @@ class Result
         }
 
         return json_encode($result, $options);
+    }
+
+    /**
+     * @return array
+     */
+    public function getFinalFileContents()
+    {
+        return $this->finalFileContents;
+    }
+
+    /**
+     * @param array $finalFileContents
+     */
+    public function setFinalFileContents($finalFileContents)
+    {
+        $this->finalFileContents = $finalFileContents;
     }
 }
