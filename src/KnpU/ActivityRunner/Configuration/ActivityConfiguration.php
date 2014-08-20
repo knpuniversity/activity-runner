@@ -43,7 +43,7 @@ class ActivityConfiguration implements ConfigurationInterface
                     ->scalarNode('entry_point')
                         ->cannotBeEmpty()
                     ->end()
-                    ->scalarNode('before_execute')->end()
+                    ->scalarNode('before_execute')->defaultValue(null)->end()
                     ->scalarNode('context')->defaultValue(false)->end()
                     ->scalarNode('asserts')
                         ->cannotBeEmpty()
