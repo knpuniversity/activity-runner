@@ -66,7 +66,7 @@ class Result
         $inputs = $this->getInputFiles();
         if ($filename === null) {
             if (count($inputs) > 1) {
-                throw new \InvalidArgumentException(sprintf('If your input contains more than 1 file, you must specify the filename.'));
+                throw new \InvalidArgumentException(sprintf('TestSuite: You must call getInput() with a filename because there are multiple files.'));
             }
 
             return $inputs->first();

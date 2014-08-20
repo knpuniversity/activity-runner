@@ -70,6 +70,11 @@ class Activity implements ActivityInterface
     private $workerName;
 
     /**
+     * @var string
+     */
+    private $beforeExecute;
+
+    /**
      * @param ClassLoader $classLoader
      */
     public function __construct(ClassLoader $classLoader)
@@ -281,5 +286,21 @@ class Activity implements ActivityInterface
     public function getWorkerName()
     {
         return $this->workerName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBeforeExecute()
+    {
+        return $this->beforeExecute;
+    }
+
+    /**
+     * @param string $beforeExecute
+     */
+    public function setBeforeExecute($beforeExecute)
+    {
+        $this->beforeExecute = $beforeExecute;
     }
 }

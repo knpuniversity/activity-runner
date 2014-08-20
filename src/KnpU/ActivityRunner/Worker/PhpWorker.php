@@ -81,13 +81,14 @@ class PhpWorker implements WorkerInterface
     {
         $inputFiles = $activity->getInputFiles();
         $entryPoint = $activity->getEntryPoint();
+        $beforeExecute = $activity->getBeforeExecute();
 
         $result = new Result();
         $result->setInputFiles($inputFiles);
 
         try {
 
-            $process = $this->execute($inputFiles, $entryPoint);
+            $process = $this->execute($inputFiles, $entryPoint, $beforeExecute);
 
             if ($process->isSuccessful()) {
                 $result->setOutput($process->getOutput());
@@ -163,15 +164,27 @@ class PhpWorker implements WorkerInterface
      *
      * @param Collection $files
      * @param string $entryPoint
+     * @param string $beforeExecute
      *
      * @return Process  The process run; can be used to retrieve output
      *
      * @throws \Exception if the process fails
      *
      */
-    private function execute(Collection $files, $entryPoint)
+    private function execute(Collection $files, $entryPoint, $beforeExecute)
     {
         $this->currentBaseDir = $this->setUp($files, $this->filesystem);
+
+        // hacky little solution that adds a "require" to the beforeExecute
+        // script to include the entry point. Then uses it as the entry point
+        if ($beforeExecute) {
+            $beforeExecutePath = $this->currentBaseDir.'/'.$beforeExecute;
+            $beforeExecuteContents = file_get_contents($beforeExecutePath);
+            $beforeExecuteContents .= sprintf('require "%s";', $entryPoint);
+
+            file_put_contents($beforeExecutePath, $beforeExecuteContents);
+            $entryPoint = $beforeExecute;
+        }
 
         $process = $this->createProcess($this->currentBaseDir, $entryPoint);
         $process->setTimeout($this->timeout);

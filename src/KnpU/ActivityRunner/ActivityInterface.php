@@ -62,4 +62,11 @@ interface ActivityInterface
      * @return string
      */
     function getWorkerName();
+
+    /**
+     * A filename that should be executed before running the code
+     *
+     * @return string
+     */
+    function getBeforeExecute();
 }
