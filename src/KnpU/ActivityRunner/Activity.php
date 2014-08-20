@@ -138,10 +138,21 @@ class Activity implements ActivityInterface
         $allowedPaths = array_keys($this->skeletons);
         $actualPaths  = $files->getKeys();
 
+        // avoid an error here because of the extra "before_execute" input files
+        foreach ($actualPaths as $key => $actualPath) {
+            if ($actualPath == $this->getBeforeExecute()) {
+                unset($actualPaths[$key]);
+            }
+        }
+
         if (($diff = array_diff($allowedPaths, $actualPaths)) ||
             ($diff = array_diff($actualPaths, $allowedPaths))
         ) {
-            throw new \RuntimeException(sprintf("User input does not match skeleton files - key diff: `%s`", implode('`, `', $diff)));
+            throw new \RuntimeException(sprintf(
+                "User input does not match skeleton files: Allowed paths `%s`. Actual paths `%s`",
+                implode(', ', $allowedPaths),
+                implode(', ', $actualPaths)
+            ));
         }
 
         $this->inputFiles = $files;
