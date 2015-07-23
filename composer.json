@@ -23,6 +23,7 @@
         "symfony/dom-crawler": "~2.2",
         "symfony/process": "~2.2",
         "symfony/yaml": "~2.2",
+        "symfony/expression-language": "~2.7",
         "twig/twig": "~1.12",
         "silex/silex": "~1.0",
         "nikic/php-parser": "~0.9",
@@ -31,8 +32,7 @@
     },
     "autoload": {
         "psr-0": {
-            "KnpU\\ActivityRunner": "src",
-            "KnpU\\ActivityRunner\\Tests": "tests"
+            "KnpU\\ActivityRunner": "src"
         }
     },
     "extra": {
