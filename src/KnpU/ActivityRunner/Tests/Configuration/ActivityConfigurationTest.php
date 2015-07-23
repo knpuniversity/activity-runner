@@ -21,6 +21,7 @@ class ActivityConfigurationTest extends \PHPUnit_Framework_TestCase
                     'entry_point' => 'foo.html.twig',
                     'context'     => 'KnpU\\ActivityRunner\\Tests\\Context',
                     'asserts'     => 'KnpU\\ActivityRunner\\Tests\\Assert',
+                    'before_execute' => null,
                 )
             )
         );

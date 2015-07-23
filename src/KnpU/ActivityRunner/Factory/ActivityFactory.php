@@ -74,7 +74,9 @@ class ActivityFactory
         $activity->setContext($activityConfig['context']);
         $activity->setSuiteSource($activityConfig['asserts']);
         $activity->setWorkerName($activityConfig['worker']);
-        $activity->setBeforeExecute($activityConfig['before_execute']);
+
+        $beforeExecute = isset($activityConfig['before_execute']) ? $activityConfig['before_execute'] : null;
+        $activity->setBeforeExecute($beforeExecute);
 
         return $activity;
     }
