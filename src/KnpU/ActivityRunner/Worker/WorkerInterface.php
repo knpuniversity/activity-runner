@@ -2,7 +2,7 @@
 
 namespace KnpU\ActivityRunner\Worker;
 
-use KnpU\ActivityRunner\ActivityInterface;
+use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 
 /**
@@ -16,11 +16,11 @@ interface WorkerInterface
      * processed. Nevertheless, the results are returned in a unified result
      * object.
      *
-     * @param ActivityInterface $activity  The activity to render
+     * @param Activity $activity  The activity to render
      *
      * @return \KnpU\ActivityRunner\Result
      */
-    function render(ActivityInterface $activity);
+    function execute(Activity $activity);
 
     /**
      * Does the worker support the file?
@@ -31,15 +31,6 @@ interface WorkerInterface
      * @return boolean
      */
     function supports($fileName, array $context);
-
-    /**
-     * Sets any possible internal objects, contexxt etc. to the given suite.
-     * The exact internals set will be determined by the types of both the
-     * worker as well as the suite.
-     *
-     * @param AssertSuite $suite
-     */
-    function injectInternals(AssertSuite $suite);
 
     /**
      * Gets the name of the worker.

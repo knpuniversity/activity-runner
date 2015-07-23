@@ -2,12 +2,11 @@
 
 namespace KnpU\ActivityRunner\Worker;
 
-use KnpU\ActivityRunner\ActivityInterface;
+use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\Assert\AssertSuite;
 use KnpU\ActivityRunner\Assert\TwigAwareInterface;
 use KnpU\ActivityRunner\ErrorHandler\TwigErrorHandler;
 use KnpU\ActivityRunner\Exception\TwigException;
-use KnpU\ActivityRunner\Worker\WorkerInterface;
 use KnpU\ActivityRunner\Result;
 
 /**
@@ -39,16 +38,17 @@ class TwigWorker implements WorkerInterface
     /**
      * {@inheritDoc}
      */
-    public function render(ActivityInterface $activity)
+    public function execute(Activity $activity)
     {
         $inputFiles = $activity->getInputFiles();
-        $entryPoint = $activity->getEntryPoint();
-        $context    = $activity->getContext();
+        $entryPoint = $activity->getEntryPointFilename();
 
         $this->twig->setLoader(new \Twig_Loader_Array($inputFiles->toArray()));
 
-        $result = new Result();
-        $result->setInputFiles($inputFiles);
+        // we really need to dump all the final files to disk, including
+        // the stuff that actually runs Twig
+        // PHP worker: just execute the file
+        // Twig worker: Setup a Twig_Environment for you and render the template
 
         $errorHandler = TwigErrorHandler::register();
 
@@ -73,16 +73,6 @@ class TwigWorker implements WorkerInterface
         }
 
         return $result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function injectInternals(AssertSuite $suite)
-    {
-        if ($suite instanceof TwigAwareInterface) {
-            $suite->setTwig($this->twig);
-        }
     }
 
     /**

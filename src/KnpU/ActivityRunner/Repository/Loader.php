@@ -26,7 +26,7 @@ class Loader implements LoaderInterface
     /**
      * @param Strategy $namingStrategy  Strategy for repository filesystem name generation
      */
-    public function __construct(Strategy $namingStrategy, Filesystem $filesystem = null)
+    public function __construct(Strategy $namingStrategy)
     {
         $this->namingStrategy = $namingStrategy;
     }

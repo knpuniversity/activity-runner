@@ -21,7 +21,7 @@ class TwigWorkerTest extends \PHPUnit_Framework_TestCase
         $activity = $this->getMockActivity($templates, 'base.html.twig', array('name' => 'world'));
 
         $worker = new TwigWorker();
-        $result = $worker->render($activity);
+        $result = $worker->execute($activity);
 
         $this->assertEquals('Hello, world!', $result->getOutput());
     }
@@ -40,7 +40,7 @@ class TwigWorkerTest extends \PHPUnit_Framework_TestCase
         $activity = $this->getMockActivity($templates, 'test.html.twig', array('postedAt' => new \DateTime()));
 
         $worker = new TwigWorker();
-        $result = $worker->render($activity);
+        $result = $worker->execute($activity);
 
         $result = $result->toArray();
         $this->assertCount(1, $result['errors']['validation']);

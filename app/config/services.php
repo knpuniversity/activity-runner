@@ -21,7 +21,6 @@ $app['activity_factory'] = function ($app) {
 
 $app['activity_runner'] = $app->share(function ($app) {
     $activityRunner = new KnpU\ActivityRunner\ActivityRunner(
-        $app['asserter'],
         $app['worker_bag']
     );
 
@@ -30,19 +29,6 @@ $app['activity_runner'] = $app->share(function ($app) {
 
 $app['annotation_reader'] = $app->share(function () {
     return new Doctrine\Common\Annotations\AnnotationReader();
-});
-
-$app['annotation_default_run_state'] = function () {
-    return new KnpU\ActivityRunner\Assert\Suite\RunIf(array(
-        'value' => new KnpU\ActivityRunner\Assert\Suite\Passed()
-    ));
-};
-
-$app['asserter'] = $app->share(function ($app) {
-    return new KnpU\ActivityRunner\Assert\Asserter(
-        $app['annotation_reader'],
-        $app['annotation_default_run_state']
-    );
 });
 
 $app['assert_loader'] = $app->share(function () {
@@ -110,15 +96,7 @@ $app['repository.naming_strategy'] = $app->share(function ($app) {
 $app['worker_bag'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\WorkerBag(array(
         $app['worker.twig'],
-        $app['worker.php'],
-        $app['worker.chained'],
-    ));
-});
-
-$app['worker.chained'] = $app->share(function ($app) {
-    return new KnpU\ActivityRunner\Worker\ChainedWorker(array(
-        $app['worker.twig'],
-        $app['worker.php'],
+        $app['worker.php']
     ));
 });
 
@@ -127,8 +105,6 @@ $app['worker.php'] = $app->share(function ($app) {
         $app['filesystem'],
         $app['php_parser']
     );
-
-    $worker->setTimeout($app['worker.time_limit']);
 
     return $worker;
 });

@@ -9,7 +9,7 @@ use Symfony\Component\DomCrawler\Crawler;
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
  */
-abstract class AssertSuite extends \PHPUnit_Framework_Assert implements AssertSuiteInterface
+abstract class AssertSuite extends \PHPUnit_Framework_Assert
 {
     /**
      * A helper function so that you can run your suite with PHPUnit

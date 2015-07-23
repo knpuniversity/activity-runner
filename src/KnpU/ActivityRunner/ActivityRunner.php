@@ -2,8 +2,12 @@
 
 namespace KnpU\ActivityRunner;
 
-use KnpU\ActivityRunner\Assert\AsserterInterface;
+use KnpU\ActivityRunner\Assert\Helper\FileSource;
+use KnpU\ActivityRunner\Assert\Helper\FileSourceCollection;
+use KnpU\ActivityRunner\Assert\Helper\Output;
 use KnpU\ActivityRunner\Worker\WorkerBag;
+use Symfony\Component\ExpressionLanguage\ExpressionFunction;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 /**
  * Actually executes an Activity and then passes it to the suite for validation
@@ -16,23 +20,14 @@ use KnpU\ActivityRunner\Worker\WorkerBag;
 class ActivityRunner
 {
     /**
-     * @var AsserterInterface
-     */
-    protected $asserter;
-
-    /**
      * @var WorkerBag
      */
     protected $workerBag;
 
     /**
-     * @param AsserterInterface $asserter
-     * @param ActivityConfigBuilder $configBuilder
-     * @param ActivityFactory $factory
      * @param WorkerBag $workerBag
      */
-    public function __construct(AsserterInterface $asserter, WorkerBag $workerBag) {
-        $this->asserter  = $asserter;
+    public function __construct(WorkerBag $workerBag) {
         $this->workerBag = $workerBag;
     }
 
@@ -45,19 +40,46 @@ class ActivityRunner
     {
         $worker = $this->getWorker($activity->getWorkerName());
 
-        $result = $worker->render($activity);
+        $result = $worker->execute($activity);
 
-        $worker->injectInternals($activity->getSuite());
-
-        // Validates the result regardless of whether the activity failed
-        // completely or ran successfully.
-        $errors = $this->asserter->validate($result, $activity);
-
-        if ($errors) {
-            $result->setValidationErrors($errors);
-        }
+        $this->executeAsserts($activity, $result);
 
         return $result;
+    }
+
+    private function executeAsserts(Activity $activity, Result $result)
+    {
+        $expressionLanguage = new ExpressionLanguage();
+        $sourceFunction = new ExpressionFunction(
+            'source',
+            function() {
+                throw new \Exception('no supported - at least not now');
+            },
+            function(array $variables, $value) {
+                // ...
+                return $variables['files']->getFile($value);
+            }
+        );
+        $expressionLanguage->addFunction($sourceFunction);
+
+        $fileSourceCollection = new FileSourceCollection();
+        foreach ($activity->getInputFiles() as $filename => $source) {
+            $fileSource = new FileSource($source);
+            $fileSourceCollection->addFile($filename, $fileSource);
+        }
+
+        $variables = array(
+            'files' => $fileSourceCollection,
+            'output' => new Output($result->getOutput()),
+        );
+
+        foreach ($activity->getAssertExpressions() as $assertExpression)
+        {
+            if (!$expressionLanguage->evaluate($assertExpression, $variables)) {
+                // we don't really have a reason right now
+                $result->setValidationError('Incorrect');
+            }
+        }
     }
 
     /**
@@ -70,4 +92,3 @@ class ActivityRunner
         return $this->workerBag->get($workerName);
     }
 }
-

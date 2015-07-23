@@ -2,18 +2,12 @@
 
 namespace KnpU\ActivityRunner;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
  */
 class Result
 {
-    /**
-     * @var Collection
-     */
-    protected $inputFiles;
+    protected $activity;
 
     /**
      * @var string
@@ -23,7 +17,7 @@ class Result
     /**
      * @var array
      */
-    protected $validationErrors = array();
+    protected $validationError;
 
     /**
      * @var string
@@ -39,57 +33,9 @@ class Result
      */
     protected $finalFileContents = array();
 
-    public function __construct($output = '')
+    public function __construct(Activity $activity)
     {
-        $this->inputFiles = new ArrayCollection();
-        $this->output = $output;
-    }
-
-    /**
-     * @param Collection $inputFiles
-     */
-    public function setInputFiles(Collection $files)
-    {
-        $this->inputFiles = $files;
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getInputFiles()
-    {
-        return $this->inputFiles;
-    }
-
-    /**
-     * Returns the submitting input
-     *
-     * You can leave filename blank if there is only one file
-     *
-     * @param null|string $filename
-     * @return string
-     * @throws \LogicException
-     */
-    public function getInput($filename = null)
-    {
-        $inputs = $this->getInputFiles();
-        if ($filename === null) {
-            if (count($inputs) > 1) {
-                throw new \InvalidArgumentException(sprintf('TestSuite: You must call getInput() with a filename because there are multiple files.'));
-            }
-
-            return $inputs->first();
-        }
-
-        if (!isset($inputs[$filename])) {
-            throw new \LogicException(sprintf(
-                'No file named `%s` found as an input file, possible values are: `%s`',
-                $filename,
-                implode('`, `', $inputs->getKeys())
-            ));
-        }
-
-        return $inputs[$filename];
+        $this->activity = $activity;
     }
 
     /**
@@ -109,29 +55,11 @@ class Result
     }
 
     /**
-     * @param array $validationErrors
+     * @param string $validationError
      */
-    public function setValidationErrors(array $validationErrors)
+    public function setValidationError($validationError)
     {
-        // Remove PHPUnit generated automatic 'Failed asserting that ...'
-        // validation messages. I tried using composer to override
-        // PHPUnit_Framework_Constraint and implement our own version of
-        // the `fail` method, but some constraints implement their own
-        // version of it, so that solution would have been even dirtier.
-
-        $pattern = "\nFailed asserting that";
-
-        foreach ($validationErrors as $key => $validationError) {
-            $endPos = strrpos($validationError, $pattern);
-
-            // Only removes the text, if its not the only part of the
-            // validation error message.
-            if (false !== $endPos && 0 !== $endPos) {
-                $validationErrors[$key] = substr($validationError, 0, $endPos);
-            }
-        }
-
-        $this->validationErrors = $validationErrors;
+        $this->validationError = $validationError;
     }
 
     /**
@@ -143,68 +71,27 @@ class Result
     }
 
     /**
-     * @return boolean
-     */
-    public function hasLanguageError()
-    {
-        return (boolean) $this->languageError;
-    }
-
-    /**
      * Does this result appear to be valid
      *
      * @return bool
      */
     public function isValid()
     {
-        return count($this->validationErrors) < 1 && !$this->languageError;
+        return !$this->validationError && !$this->languageError;
     }
 
-    /**
-     * @return array
-     */
-    public function toArray()
+    public function addFinalFileContents($filename, $contents)
     {
-        return array(
-            'input'  => $this->inputFiles->toArray(),
-            'output' => $this->output,
-            'valid'  => $this->isValid(),
-            'errors' => array(
-                'validation' => $this->validationErrors,
-                'language'   => $this->languageError
-            ),
-        );
+        $this->finalFileContents[$filename] = $contents;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function getValidationError()
     {
-        $result     = $this->toArray();
-
-        $options = 0;
-
-        if (defined('JSON_PRETTY_PRINT')) {
-            $options |= JSON_PRETTY_PRINT;
-        }
-
-        return json_encode($result, $options);
+        return $this->validationError;
     }
 
-    /**
-     * @return array
-     */
-    public function getFinalFileContents()
+    public function getLanguageError()
     {
-        return $this->finalFileContents;
-    }
-
-    /**
-     * @param array $finalFileContents
-     */
-    public function setFinalFileContents($finalFileContents)
-    {
-        $this->finalFileContents = $finalFileContents;
+        return $this->languageError;
     }
 }

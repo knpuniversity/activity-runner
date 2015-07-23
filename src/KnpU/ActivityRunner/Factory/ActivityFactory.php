@@ -70,7 +70,7 @@ class ActivityFactory
         $activity = new Activity($this->classLoader);
         $activity->setQuestion($activityConfig['question']);
         $activity->setSkeletons($activityConfig['skeletons']);
-        $activity->setEntryPoint($activityConfig['entry_point']);
+        $activity->setEntryPointFilename($activityConfig['entry_point']);
         $activity->setContext($activityConfig['context']);
         $activity->setSuiteSource($activityConfig['asserts']);
         $activity->setWorkerName($activityConfig['worker']);

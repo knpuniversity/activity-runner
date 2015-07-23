@@ -41,7 +41,7 @@ EOD;
 
         $worker = $this->createWorker();
 
-        $result = $worker->render($activity);
+        $result = $worker->execute($activity);
 
         $this->assertContains('Hello, world!', $result->getOutput());
     }
@@ -56,7 +56,7 @@ EOD;
         $worker = $this->createWorker();
         $worker->setTimeout(0.2);
 
-        $result = $worker->render($activity)->toArray();
+        $result = $worker->execute($activity)->toArray();
 
         $this->assertContains('too long time', $result['errors']['language']);
     }
@@ -87,7 +87,7 @@ EOD;
 
         $worker = $this->createWorker($mockFs);
         $worker->setTimeout(0.2);
-        $worker->render($activity);
+        $worker->execute($activity);
     }
 
     public function testNoChildProcessesLeftDangling()
@@ -103,7 +103,7 @@ EOD;
 
         $worker = $this->createWorker();
         $worker->setTimeout(0.2);
-        $worker->render($activity);
+        $worker->execute($activity);
 
         // The worker should have killed the newly created process. Let's look
         // at running processes again - we should have exactly the same number
@@ -134,7 +134,7 @@ EOD;
         $worker->setTimeout(0.2);
 
         $timeStart = microtime(true);
-        $worker->render($activity);
+        $worker->execute($activity);
         $timeStop = microtime(true);
 
         $this->assertEquals(0.2, $timeStop - $timeStart, '', 0.1);

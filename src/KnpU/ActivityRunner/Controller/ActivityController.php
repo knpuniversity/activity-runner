@@ -3,6 +3,8 @@
 namespace KnpU\ActivityRunner\Controller;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use KnpU\ActivityRunner\Activity;
+use KnpU\ActivityRunner\ActivityRunner;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
 use KnpU\ActivityRunner\Repository\Repository;
@@ -15,36 +17,42 @@ class ActivityController
     /**
      * Checks user's answers.
      *
-     * Mandatory POST parameters:
-     *
-     *  -  activity    Name of the activity
-     *  -  file[]      Submitted files (e.g. 'file[foo.php]=...&file[foo.php]=...')
-     *  -  repository  URL of the repository
-     *  -  ref         Repository ref (branch name, commit hash etc.)
-     *
-     * Optional POST parameters:
-     *
-     *  -  output-format  Either 'yaml' or 'json'
-     *
      * @param Request $request
      * @param Application $app
      * @return string
      */
     public function checkAction(Request $request, Application $app)
     {
-        $activityName = $request->request->get('activity');
-        $inputFiles = new ArrayCollection($request->request->get('file', array()));
+        // an associative array of filenames => contents
+        $inputFiles = $request->request->get('file', array());
+        // filename of "file" collection to execute
+        $entryPointFilename = $request->request->get('entryPoint');
+        // something like php, twig
+        $workerName = $request->request->get('worker');
+        // expressions to assert against
+        $asserts = $request->request->get('asserts');
 
-        $url = $request->request->get('repository');
-        $ref = $request->request->get('ref');
+        $activity = new Activity($workerName, $entryPointFilename);
+        foreach ($inputFiles as $filename => $inputFileSource) {
+            $activity->addInputFile($filename, $inputFileSource);
+        }
+        foreach ($asserts as $assertExpression) {
+            $activity->addAssertExpression($assertExpression);
+        }
 
-        /** @var Repository $repository */
-        $repository = $app['repository.loader']->load($url, $ref);
+        /** @var ActivityRunner $activityRunner */
+        $activityRunner = $app['activity_runner'];
 
-        $activity = $repository->getActivity($activityName);
-        $activity->setInputFiles($inputFiles);
+        $result = $activityRunner->run($activity);
 
-        $result = $app['activity_runner']->run($activity);
+        $data = array(
+            'output' => $result->getOutput(),
+            'value'  => $result->isValid(),
+            'errors' => array(
+                'validation' => $result->getValidationError(),
+                'language' => $result->getLanguageError(),
+            ),
+        );
 
         return (string) $result;
     }

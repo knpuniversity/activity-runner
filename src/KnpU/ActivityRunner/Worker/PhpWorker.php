@@ -3,10 +3,8 @@
 namespace KnpU\ActivityRunner\Worker;
 
 use Doctrine\Common\Collections\Collection;
+use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\Result;
-use KnpU\ActivityRunner\ActivityInterface;
-use KnpU\ActivityRunner\Assert\AssertSuite;
-use KnpU\ActivityRunner\Assert\PhpAwareInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Exception\RuntimeException;
@@ -31,14 +29,14 @@ class PhpWorker implements WorkerInterface
     /**
      * @var string
      */
-    protected $prefix;
+    protected $prefix = 'knpu_php_';
 
     /**
      * The maximum amount of time the PHP process can take to execute.
      *
      * @var integer
      */
-    protected $timeout;
+    protected $timeout = 10;
 
     private $currentBaseDir;
 
@@ -50,52 +48,34 @@ class PhpWorker implements WorkerInterface
     {
         $this->filesystem = $filesystem;
         $this->parser     = $parser;
-
-        $this->setTimeout();
-        $this->setPrefix();
-    }
-
-    /**
-     * Sets the timeout in seconds.
-     *
-     * @param integer|float $timeout
-     */
-    public function setTimeout($timeout = 0)
-    {
-        $this->timeout = $timeout;
-    }
-
-    /**
-     * Sets the prefix that's used when creating a temporary directory.
-     *
-     * @param string $prefix
-     */
-    public function setPrefix($prefix = 'knpu_php_')
-    {
-        $this->prefix = $prefix;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function render(ActivityInterface $activity)
+    public function execute(Activity $activity)
     {
-        $inputFiles = $activity->getInputFiles();
-        $entryPoint = $activity->getEntryPoint();
-        $beforeExecute = $activity->getBeforeExecute();
+        if ($activity->getContextSource()) {
+            throw new \LogicException(
+                'The php worker does not support a context source. Just include it as an input file!'
+            );
+        }
 
-        $result = new Result();
-        $result->setInputFiles($inputFiles);
+        $inputFiles = $activity->getInputFiles();
+        $entryPoint = $activity->getEntryPointFilename();
+
+        $result = new Result($activity);
 
         try {
-
-            $process = $this->execute($inputFiles, $entryPoint, $beforeExecute, $result);
+            $process = $this->executePhpProcess($inputFiles, $entryPoint, $result);
 
             if ($process->isSuccessful()) {
                 $result->setOutput($process->getOutput());
             } else {
                 if ($process->getErrorOutput()) {
-                    $result->setLanguageError($process->getErrorOutput());
+                    $result->setLanguageError(
+                        $this->cleanError($process->getErrorOutput())
+                    );
                 } else {
                     // from experience, this could be a failure entirely to execute the entry point
                     // or it could be a parse error
@@ -108,13 +88,9 @@ class PhpWorker implements WorkerInterface
 //                        $process->getOutput()
 //                    ));
 
-                    // todo - this is not working if the directory is in a symlink for some reason
-                    // realpath returns false - the path gets messed up (at least in my computer)
-                    // but I'm leaving this, because I think it'll work on a system where /tmp is not a symlink
-                    $output = $process->getOutput();
-                    str_replace($this->currentBaseDir, '', $output);
-
-                    $result->setLanguageError($output);
+                    $result->setLanguageError(
+                        $this->cleanError($process->getOutput())
+                    );
                 }
             }
 
@@ -144,16 +120,6 @@ class PhpWorker implements WorkerInterface
     /**
      * {@inheritDoc}
      */
-    public function injectInternals(AssertSuite $suite)
-    {
-        if ($suite instanceof PhpAwareInterface) {
-            $suite->setParser($this->parser);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getName()
     {
         return 'php';
@@ -163,9 +129,8 @@ class PhpWorker implements WorkerInterface
      * Sets up the environment, executes user code and tears the environment
      * down again.
      *
-     * @param Collection $files
+     * @param array $files
      * @param string $entryPoint
-     * @param string $beforeExecute
      * @param Result $result
      *
      * @return Process  The process run; can be used to retrieve output
@@ -173,21 +138,9 @@ class PhpWorker implements WorkerInterface
      * @throws \Exception if the process fails
      *
      */
-    private function execute(Collection $files, $entryPoint, $beforeExecute, Result $result)
+    private function executePhpProcess(array $files, $entryPoint, Result $result)
     {
         $this->currentBaseDir = $this->setUp($files, $this->filesystem);
-
-        // hacky little solution that adds a "require" to the beforeExecute
-        // script to include the entry point. Then uses it as the entry point
-        if ($beforeExecute) {
-            $beforeExecutePath = $this->currentBaseDir.'/'.$beforeExecute;
-            $beforeExecuteContents = file_get_contents($beforeExecutePath);
-            $beforeExecuteContents .= sprintf('require "%s";', $entryPoint);
-
-            file_put_contents($beforeExecutePath, $beforeExecuteContents);
-            $entryPoint = $beforeExecute;
-        }
-
         $process = $this->createProcess($this->currentBaseDir, $entryPoint);
         $process->setTimeout($this->timeout);
 
@@ -201,7 +154,6 @@ class PhpWorker implements WorkerInterface
             ->files()
             ->ignoreVCS(true)
         ;
-        $finalContents = array();
         foreach ($finder as $file) {
             /** @var \SplFileInfo $file */
             // get something like layout/header.php
@@ -209,9 +161,11 @@ class PhpWorker implements WorkerInterface
             // strip off the opening slash
             $relativePath = trim($relativePath, '/');
 
-            $finalContents[$relativePath] = file_get_contents($file->getPathname());
+            $result->addFinalFileContents(
+                $relativePath,
+                file_get_contents($file->getPathname())
+            );
         }
-        $result->setFinalFileContents($finalContents);
 
         $this->tearDown($this->currentBaseDir, $this->filesystem);
 
@@ -246,11 +200,11 @@ class PhpWorker implements WorkerInterface
      * a random directory is created in `/tmp` and user files are stored in
      * it.
      *
-     * @param Collection $files
+     * @param array $files
      * @param Filesystem $filesystem
      * @return string  The newly generated base directory
      */
-    private function setUp(Collection $files, Filesystem $filesystem)
+    private function setUp(array $files, Filesystem $filesystem)
     {
         do {
             $baseDir = sys_get_temp_dir().'/'.$this->prefix.mt_rand();
@@ -259,6 +213,9 @@ class PhpWorker implements WorkerInterface
         foreach ($files as $path => $contents) {
             $filesystem->dumpFile($baseDir.'/'.$path, $contents);
         }
+
+        // resolve symlinks
+        $baseDir = realpath($baseDir);
 
         return $baseDir;
     }
@@ -270,5 +227,22 @@ class PhpWorker implements WorkerInterface
     private function tearDown($dirName, Filesystem $filesystem)
     {
         $filesystem->remove($dirName);
+    }
+
+    /**
+     * Cleans up error messages
+     *
+     * Specifically, we might have a syntax error on /var/tmp/ABCD/index.php,
+     * but we really want to just show "index.php"
+     *
+     * @param string $output
+     * @return string
+     */
+    private function cleanError($output)
+    {
+        $output = str_replace($this->currentBaseDir.'/', '', $output);
+        $output = str_replace($this->currentBaseDir, '', $output);
+
+        return $output;
     }
 }
