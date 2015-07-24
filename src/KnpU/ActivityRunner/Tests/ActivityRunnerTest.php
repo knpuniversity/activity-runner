@@ -129,7 +129,7 @@ EOF
         $result->setOutput(null);
         $result->setLanguageError("PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in index.php on line 3\n");
 
-        $tests[] = array($activity, $result);
+        $tests['php_syntax_error'] = array($activity, $result);
 
 
         /* TEST START */
@@ -137,12 +137,64 @@ EOF
         $activity->addInputFile('show.twig', <<<EOF
 <h1>{{ name|upper }}</h1>
 EOF
-        );
+        )->setContextSource('return array("name" => "Dag");');
         $result = new Result($activity);
-        $result->setOutput(null);
-        $result->setLanguageError("PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in index.php on line 3\n");
+        $result->setOutput('<h1>DAG</h1>');
 
         $tests[] = array($activity, $result);
+
+
+        /* TEST START */
+        $activity = new Activity('twig', 'show.twig');
+        $activity->addInputFile('show.twig', <<<EOF
+<h1>{{ bacon }}</h1>
+EOF
+        )->setContextSource('return array("name" => "Dag");');
+        $result = new Result($activity);
+        $result->setOutput('');
+        $result->setLanguageError('Variable "bacon" does not exist in "show.twig" at line 1');
+        $tests['twig_bad_variable'] = array($activity, $result);
+
+
+        /* TEST START */
+        $activity = new Activity('twig', 'show.twig');
+        $activity->addInputFile('show.twig', <<<EOF
+<h1>{{ 'foo }}</h1>
+EOF
+        )->setContextSource('return array("name" => "Dag");');
+        $result = new Result($activity);
+        $result->setOutput('');
+        $result->setLanguageError('Unexpected character "\'" in "show.twig" at line 1');
+        $tests['twig_syntax_error'] = array($activity, $result);
+
+
+        /* TEST START */
+        $activity = new Activity('twig', 'show.twig');
+        $activity->addInputFile('show.twig', <<<EOF
+<h1>{{ name|upper }}</h1>
+EOF
+        )->setContextSource('return array("name" => "Dag");')
+        ->addAssertExpression(
+            "source('show.twig').assertContains('name')"
+        );
+        $result = new Result($activity);
+        $result->setOutput('<h1>DAG</h1>');
+        $tests['twig_successful_validation'] = array($activity, $result);
+
+
+        /* TEST START */
+        $activity = new Activity('twig', 'show.twig');
+        $activity->addInputFile('show.twig', <<<EOF
+<h1>{{ name|upper }}</h1>
+EOF
+        )->setContextSource('return array("name" => "Dag");')
+        ->addAssertExpression(
+            "source('show.twig').assertContains('lower')"
+        );
+        $result = new Result($activity);
+        $result->setOutput('<h1>DAG</h1>');
+        $result->setValidationError('Incorrect');
+        $tests['twig_successful_validation'] = array($activity, $result);
 
         return $tests;
     }

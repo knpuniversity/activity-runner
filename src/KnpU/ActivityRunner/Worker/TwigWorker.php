@@ -8,6 +8,7 @@ use KnpU\ActivityRunner\Assert\TwigAwareInterface;
 use KnpU\ActivityRunner\ErrorHandler\TwigErrorHandler;
 use KnpU\ActivityRunner\Exception\TwigException;
 use KnpU\ActivityRunner\Result;
+use KnpU\ActivityRunner\Worker\Executor\CodeExecutor;
 
 /**
  * The twig worker is capable of rendering Twig templates and running
@@ -22,17 +23,12 @@ class TwigWorker implements WorkerInterface
      */
     protected $twig;
 
-    public function __construct()
-    {
-        // At this point we really don't know exactly which loader to use. This
-        // will be decided on a per run basis.
-        $this->twig = new \Twig_Environment(null, array(
-            'cache'            => false,
-            'debug'            => true,
-            'strict_variables' => true,
-        ));
+    private $projectRootDir;
 
-        $this->twig->addExtension(new \Twig_Extension_Debug());
+    public function __construct(\Twig_Environment $twig, $projectRootDir)
+    {
+        $this->twig = $twig;
+        $this->projectRootDir = $projectRootDir;
     }
 
     /**
@@ -41,36 +37,38 @@ class TwigWorker implements WorkerInterface
     public function execute(Activity $activity)
     {
         $inputFiles = $activity->getInputFiles();
-        $entryPoint = $activity->getEntryPointFilename();
+        $entryPointFilename = $activity->getEntryPointFilename();
 
-        $this->twig->setLoader(new \Twig_Loader_Array($inputFiles->toArray()));
+        $twigRenderingCode = $this->twig->render('twig_worker.render.php.twig', array(
+            'context' => $activity->getContextSource(),
+            'entryPointFilename' => $entryPointFilename,
+            'projectPath'  => $this->projectRootDir
+        ));
+        $inputFiles['twigWorkerRender.php'] = $twigRenderingCode;
 
-        // we really need to dump all the final files to disk, including
-        // the stuff that actually runs Twig
-        // PHP worker: just execute the file
-        // Twig worker: Setup a Twig_Environment for you and render the template
+        $codeExecutor = new CodeExecutor($inputFiles, 'twigWorkerRender.php');
+        $executionResult = $codeExecutor->executePhpProcess();
 
-        $errorHandler = TwigErrorHandler::register();
-
-        try {
-            $output = $this->twig->render($entryPoint, $context);
-            $result->setOutput($output);
-
-            $errorHandler->restore();
-        } catch (\Twig_Error $error) {
-            $errorHandler->restore();
-
-            if (($previous = $error->getPrevious()) && $previous instanceof TwigException) {
-                // Treat TwigException errors as validation errors.
-                $result->setValidationErrors(array($error->getMessage()));
-            } else {
-                $result->setLanguageError($error->getMessage());
-            }
-        } catch (\Exception $error) {
-            $errorHandler->restore();
-
-            $result->setLanguageError($error->getMessage());
+        // unless we had a syntax error, the output should be a serialized ExecutionResult
+        // of what happened internally. If so, we use that - it'll contain Twig error
+        // details, etc
+        if (!$executionResult->getOutput()) {
+            throw new \Exception(sprintf(
+                'Problem running Twig! "%s"',
+                $executionResult->getLanguageError()
+            ));
         }
+
+        $executionResult = unserialize($executionResult->getOutput());
+        if ($executionResult === false) {
+            throw new \Exception(sprintf(
+                'Problem running Twig! Got non-serialized output: "%s"'
+            ));
+        }
+
+        $result = new Result($activity);
+        $result->setLanguageError($executionResult->getLanguageError());
+        $result->setOutput($executionResult->getOutput());
 
         return $result;
     }

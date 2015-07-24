@@ -7,6 +7,8 @@ if (!$app instanceof \Silex\Application) {
     throw new \LogicException(sprintf('Expected $app to be an instance of \\Pimple, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
+$app['root_dir'] = __DIR__.'/../../';
+
 $logFile = $app['debug'] ? 'dev.log' : 'prod.log';
 $app->register(new Silex\Provider\MonologServiceProvider(), array(
     'monolog.logfile' => __DIR__.'/../logs/'.$logFile,
@@ -109,8 +111,25 @@ $app['worker.php'] = $app->share(function ($app) {
     return $worker;
 });
 
-$app['worker.twig'] = $app->share(function () {
-    return new KnpU\ActivityRunner\Worker\TwigWorker();
+$app['worker.twig'] = $app->share(function ($app) {
+    return new KnpU\ActivityRunner\Worker\TwigWorker(
+        $app['twig'],
+        $app['root_dir']
+    );
+});
+$app['twig'] = $app->share(function() {
+    $loader = new \Twig_Loader_Filesystem(array(
+        __DIR__.'/../templates'
+    ));
+    $env = new \Twig_Environment($loader, array(
+        'cache'            => false,
+        'debug'            => true,
+        'strict_variables' => true,
+    ));
+
+    $env->addExtension(new \Twig_Extension_Debug());
+
+    return $env;
 });
 
 $app['yaml'] = $app->share(function () {

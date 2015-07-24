@@ -86,5 +86,7 @@ class Activity
     public function setContextSource($contextSource)
     {
         $this->contextSource = $contextSource;
+
+        return $this;
     }
 }
