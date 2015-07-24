@@ -30,6 +30,11 @@ class CodeExecutor
     {
         $this->files = $files;
         $this->entryPointFilename = $entryPointFilename;
+
+        if (!isset($this->files[$entryPointFilename])) {
+            throw new \LogicException(sprintf('Bad entry point filename "%s"', $entryPointFilename));
+        }
+
         $this->filesystem = new Filesystem();
     }
 
@@ -82,6 +87,8 @@ class CodeExecutor
             } else {
                 throw $e;
             }
+        } finally {
+            $this->tearDown($this->currentBaseDir, $this->filesystem);
         }
 
         /*
@@ -103,8 +110,6 @@ class CodeExecutor
             );
         }
         */
-
-        $this->tearDown($this->currentBaseDir, $this->filesystem);
 
         return $result;
     }

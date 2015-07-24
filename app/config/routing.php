@@ -10,23 +10,8 @@ if (!isset($app)) {
 }
 
 if (!$app instanceof Application) {
-    throw new \LogicExcpetion(sprintf('Expected $app to be an instance of Silex\\Application, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
+    throw new \LogicException(sprintf('Expected $app to be an instance of Silex\\Application, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
-$app->get('/status', controller('activity/status'));
-$app->post('/check', controller('activity/check'));
-
-/**
- * Turns a short controller name into a FQCN and the proper action method. For
- * example, "foo/baz" would become "My\Fqcn\FooController::bazAction".
- *
- * @param string $shortName
- *
- * @return string
- */
-function controller($shortName)
-{
-    list($shortClass, $shortMethod) = explode('/', $shortName);
-
-    return sprintf('KnpU\\ActivityRunner\\Controller\\%sController::%sAction', ucfirst($shortClass), $shortMethod);
-}
+$app->get('/status', 'KnpU\\ActivityRunner\\Controller\\ActivityController::statusAction');
+$app->post('/check', 'KnpU\\ActivityRunner\\Controller\\ActivityController::checkAction');

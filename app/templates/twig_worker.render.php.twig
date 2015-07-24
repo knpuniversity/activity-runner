@@ -28,7 +28,7 @@ $environment->addExtension(new \Twig_Extension_Debug());
 function getTwigContext(\Twig_Environment $environment)
 {
     {# this should return its code #}
-    {{ context|raw }}
+    {{ context|raw }};
 }
 
 $context = getTwigContext($environment);

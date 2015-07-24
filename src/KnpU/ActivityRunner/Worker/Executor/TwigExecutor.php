@@ -35,12 +35,11 @@ class TwigExecutor
             );
             $executionResult->setOutput($output);
         } catch (TwigException $error) {
-            if (($previous = $error->getPrevious()) && $previous instanceof TwigException) {
-                // Treat TwigException errors as validation errors.
-                $executionResult->setValidationErrors(array($error->getMessage()));
-            } else {
-                $executionResult->setLanguageError($error->getMessage());
-            }
+            $executionResult->setLanguageError($error->getMessage());
+        } catch (\Twig_Error $error) {
+            // not doing anything special here... but in the future, we might
+            // fetch more information about line numbers, etc
+            $executionResult->setLanguageError($error->getMessage());
         } catch (\Exception $error) {
             $executionResult->setLanguageError($error->getMessage());
         } finally {
