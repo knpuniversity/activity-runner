@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\ActivityRunner;
 use Silex\Application;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use KnpU\ActivityRunner\Repository\Repository;
 
@@ -31,8 +32,10 @@ class ActivityController
         $workerName = $request->request->get('worker');
         // expressions to assert against
         $asserts = $request->request->get('asserts');
+        $contextSource = $request->request->get('context');
 
         $activity = new Activity($workerName, $entryPointFilename);
+        $activity->setContextSource($contextSource);
         foreach ($inputFiles as $filename => $inputFileSource) {
             $activity->addInputFile($filename, $inputFileSource);
         }
@@ -54,7 +57,7 @@ class ActivityController
             ),
         );
 
-        return (string) $result;
+        return new JsonResponse($data);
     }
 
     /**
