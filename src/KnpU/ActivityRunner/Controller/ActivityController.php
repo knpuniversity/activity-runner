@@ -25,7 +25,7 @@ class ActivityController
     public function checkAction(Request $request, Application $app)
     {
         // an associative array of filenames => contents
-        $inputFiles = $request->request->get('file', array());
+        $inputFiles = $request->request->get('files', array());
         // filename of "file" collection to execute
         $entryPointFilename = $request->request->get('entryPoint');
         // something like php, twig
