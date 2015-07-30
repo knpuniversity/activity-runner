@@ -18,16 +18,6 @@ use Symfony\Component\Process\Process;
 class PhpWorker implements WorkerInterface
 {
     /**
-     * @var Filesystem
-     */
-    protected $filesystem;
-
-    /**
-     * @var \PHPParser_Parser
-     */
-    protected $parser;
-
-    /**
      * @var string
      */
     protected $prefix = 'knpu_php_';
@@ -39,53 +29,16 @@ class PhpWorker implements WorkerInterface
      */
     protected $timeout = 10;
 
-    private $currentBaseDir;
-
-    /**
-     * @param Filesystem $filesystem
-     * @param \PHPParser_Parser $parser
-     */
-    public function __construct(Filesystem $filesystem, \PHPParser_Parser $parser)
+    public function getInlineCodeToExecute(\Twig_Environment $twig, Activity $activity)
     {
-        $this->filesystem = $filesystem;
-        $this->parser     = $parser;
-    }
+        $challenge = $activity->getChallengeObject();
 
-    /**
-     * {@inheritDoc}
-     */
-    public function execute(Activity $activity)
-    {
-        if ($activity->getContextSource()) {
-            throw new \LogicException(
-                'The php worker does not support a context source. Just include it as an input file!'
-            );
-        }
-
-        $inputFiles = $activity->getInputFiles();
-        $entryPointFilename = $activity->getEntryPointFilename();
-
-        $codeExecutor = new CodeExecutor($inputFiles, $entryPointFilename);
-        $executionResult = $codeExecutor->executePhpProcess();
-
-        $result = new Result($activity);
-        $result->setLanguageError(
-            $this->cleanError(
-                $executionResult->getLanguageError(),
-                $executionResult->getCodeDirectory()
+        return $twig->render(
+            'php_worker.php.twig',
+            array(
+                'entryPointFilename' => $challenge->getFileBuilder()->getEntryPointFilename()
             )
         );
-        $result->setOutput($executionResult->getOutput());
-
-        return $result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function supports($fileName, array $context)
-    {
-        return substr($fileName, -4) === '.php';
     }
 
     /**
@@ -93,23 +46,6 @@ class PhpWorker implements WorkerInterface
      */
     public function getName()
     {
-        return 'php';
-    }
-
-    /**
-     * Cleans up error messages
-     *
-     * Specifically, we might have a syntax error on /var/tmp/ABCD/index.php,
-     * but we really want to just show "index.php"
-     *
-     * @param string $output
-     * @return string
-     */
-    private function cleanError($output, $codeDirectory)
-    {
-        $output = str_replace($codeDirectory.'/', '', $output);
-        $output = str_replace($codeDirectory, '', $output);
-
-        return $output;
+        return 'php_normal';
     }
 }

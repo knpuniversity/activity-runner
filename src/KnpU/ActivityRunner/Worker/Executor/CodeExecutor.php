@@ -53,14 +53,16 @@ class CodeExecutor
         $process = $this->createProcess($this->currentBaseDir, $this->entryPointFilename);
         $process->setTimeout(self::PROCESS_TIMEOUT);
 
-        $result = new ExecutionResult($this->currentBaseDir);
-
         try {
             $process->run();
 
-            if ($process->isSuccessful()) {
-                $result->setOutput($process->getOutput());
-            } else {
+            $output = $process->getOutput();
+            $result = @unserialize($output);
+
+            // hmm - so it must have blown up!
+            if ($result === false) {
+                $result = new ExecutionResult($this->currentBaseDir);
+
                 if ($process->getErrorOutput()) {
                     $result->setLanguageError($process->getErrorOutput());
                 } else {
@@ -79,6 +81,8 @@ class CodeExecutor
                 }
             }
         } catch (RuntimeException $e) {
+            $result = new ExecutionResult($this->currentBaseDir);
+
             // A timeout is not an exceptional case. Since the validation
             // errors would be overwritten by the asserter, the message has
             // to be defined as a language error.

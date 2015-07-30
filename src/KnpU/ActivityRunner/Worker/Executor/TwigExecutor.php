@@ -1,6 +1,8 @@
 <?php
 
 namespace KnpU\ActivityRunner\Worker\Executor;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
 use KnpU\ActivityRunner\ErrorHandler\TwigErrorHandler;
 use KnpU\ActivityRunner\Exception\TwigException;
 
@@ -13,39 +15,59 @@ use KnpU\ActivityRunner\Exception\TwigException;
  */
 class TwigExecutor
 {
+    private $rootDir;
+
     /**
      * @var \Twig_Environment
      */
     private $environment;
 
-    public function __construct(\Twig_Environment $environment)
+    public function __construct($rootDir)
     {
-        $this->environment = $environment;
+        $this->rootDir = $rootDir;
     }
 
-    public function executeTwig($templateName, array $variables)
+    public function executeTwig($templateName, CodingContext $context, CodingExecutionResult $codingExecutionResult)
     {
-        $executionResult = new ExecutionResult(__DIR__); // the root dir isn't needed here
-
         $errorHandler = TwigErrorHandler::register();
         try {
-            $output = $this->environment->render(
+            $output = $this->getTwigEnvironment()->render(
                 $templateName,
-                $variables
+                $context->getVariables()
             );
-            $executionResult->setOutput($output);
+            $codingExecutionResult->setOutput($output);
         } catch (TwigException $error) {
-            $executionResult->setLanguageError($error->getMessage());
+            $codingExecutionResult->setLanguageError($error->getMessage());
         } catch (\Twig_Error $error) {
             // not doing anything special here... but in the future, we might
             // fetch more information about line numbers, etc
-            $executionResult->setLanguageError($error->getMessage());
+            $codingExecutionResult->setLanguageError($error->getMessage());
         } catch (\Exception $error) {
-            $executionResult->setLanguageError($error->getMessage());
+            $codingExecutionResult->setLanguageError($error->getMessage());
         } finally {
             $errorHandler->restore();
         }
 
-        return $executionResult;
+        return $codingExecutionResult;
+    }
+
+    private function getTwigEnvironment()
+    {
+        if ($this->environment === null) {
+            $loader = new \Twig_Loader_Filesystem(array(
+                $this->rootDir
+            ));
+            $environment = new \Twig_Environment($loader, array(
+                'cache'            => false,
+                'debug'            => true,
+                'strict_variables' => true,
+            ));
+
+            $environment->addExtension(new \Twig_Extension_Debug());
+
+            $this->environment = $environment;
+        }
+
+        return $this->environment;
     }
 }

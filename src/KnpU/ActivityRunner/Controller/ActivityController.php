@@ -26,21 +26,13 @@ class ActivityController
     {
         // an associative array of filenames => contents
         $inputFiles = $request->request->get('files', array());
-        // filename of "file" collection to execute
-        $entryPointFilename = $request->request->get('entryPoint');
-        // something like php, twig
-        $workerName = $request->request->get('worker');
-        // expressions to assert against
-        $asserts = $request->request->get('asserts');
-        $contextSource = $request->request->get('context');
 
-        $activity = new Activity($workerName, $entryPointFilename);
-        $activity->setContextSource($contextSource);
+        $challengeClassContents = $request->request->get('challengeClassContents');
+        $challengeClassName = $request->request->get('challengeClassName');
+
+        $activity = new Activity($challengeClassName, $challengeClassContents);
         foreach ($inputFiles as $filename => $inputFileSource) {
             $activity->addInputFile($filename, $inputFileSource);
-        }
-        foreach ($asserts as $assertExpression) {
-            $activity->addAssertExpression($assertExpression);
         }
 
         /** @var ActivityRunner $activityRunner */
@@ -50,9 +42,9 @@ class ActivityController
 
         $data = array(
             'output' => $result->getOutput(),
-            'value'  => $result->isValid(),
+            'isCorrect' => $result->isCorrect(),
             'errors' => array(
-                'validation' => $result->getValidationError(),
+                'validation' => $result->getGradingError(),
                 'language' => $result->getLanguageError(),
             ),
         );

@@ -32,17 +32,16 @@ class ActivityRunnerTest extends \PHPUnit_Framework_TestCase
      */
     public function testIntegration(Activity $activity, Result $expectedResult)
     {
-
-
         /** @var ActivityRunner $runner */
         $runner = self::$container['activity_runner'];
 
         $result = $runner->run($activity);
 
         $description = sprintf(
-            'Result not expected. Output "%s". Language Error: "%s"',
+            'Result not expected. Output "%s". Language Error: "%s". Grading Error: "%s"',
             $result->getOutput(),
-            $result->getLanguageError()
+            $result->getLanguageError(),
+            $result->getGradingError()
         );
 
         $this->assertEquals(
@@ -51,74 +50,89 @@ class ActivityRunnerTest extends \PHPUnit_Framework_TestCase
             $description
         );
         $this->assertEquals(
-            $expectedResult->isValid(),
-            $result->isValid(),
+            $expectedResult->isCorrect(),
+            $result->isCorrect(),
             $description
         );
-        $this->assertEquals($expectedResult->getValidationError(), $result->getValidationError());
-        $this->assertEquals($expectedResult->getLanguageError(), $result->getLanguageError());
+        $this->assertEquals(
+            $expectedResult->getLanguageError(),
+            $result->getLanguageError(),
+            $description
+        );
+        $this->assertEquals(
+            $expectedResult->getGradingError(),
+            $result->getGradingError(),
+            $description
+        );
     }
 
     public function getIntegrationTests()
     {
         $tests = array();
 
-        $activity = new Activity('php', 'index.php');
+        $activity = $this->createActivity('CreateVariableCoding');
         $activity->addInputFile('index.php', <<<EOF
 <?php
+\$airpupTag = 'I luv kittens';
+?>
 
-echo 'I <3 Puppies!!!';
+<h2><?php echo \$airpupTag; ?></h2>
 EOF
-        )->addAssertExpression(
-            "source('index.php').assertContains('<?php')"
-        )->addAssertExpression(
-            "source('index.php').assertContains('echo')"
-        )->addAssertExpression(
-            "output.assertContains('I <3 Puppies')"
         );
+
         $result = new Result($activity);
-        $result->setOutput('I <3 Puppies!!!');
+        $result->setOutput("\n<h2>I luv kittens</h2>");
 
-        $tests[] = array($activity, $result);
+        $tests['correct_simple'] = array($activity, $result);
 
 
+        /* TEST START: Undefined variable */
+        $activity = $this->createActivity('CreateVariableCoding');
+        $activity->addInputFile('index.php', <<<EOF
+Hello!
+
+<h2><?php echo \$airpupTag; ?></h2>
+EOF
+        );
+
+        $result = new Result($activity);
+        $result->setOutput("Hello!\n\n<h2>"); // prints this before die'ing
+        $result->setLanguageError('Notice: Undefined variable: airpupTag in index.php on line 3');
+
+        $tests['php_undefined_variable'] = array($activity, $result);
+
+return $tests;
         /* TEST START: Multiple files */
-        $activity = new Activity('php', 'bootstrap.php');
+        $activity = $this->createActivity('MultipleFilesCoding');
         $activity->addInputFile('index.php', <<<EOF
-<?php
-echo 'I <3 '.\$whatILove.'!';
+<h2><?php echo \$whatILove; ?></h2>
 EOF
-        )
-        // add a bootstrap file that then runs our file
-        ->addInputFile('bootstrap.php', '<?php $whatILove = "Puppies"; require("index.php");')
-        ->addAssertExpression(
-            "output.assertContains('I <3 Puppies')"
         );
-        $result = new Result($activity);
-        $result->setOutput('I <3 Puppies!');
+        // don't send bootstrap.php - that should use the default
 
-        $tests['multiple_files'] = array($activity, $result);
+        $result = new Result($activity);
+        $result->setOutput('<h2>Puppies</h2>');
+
+        $tests['correct_multiple_files'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('php', 'index.php');
+        $activity = $this->createActivity('CreateVariableCoding');
         $activity->addInputFile('index.php', <<<EOF
 <?php
 
-echo 'I <3 Puppies!!!';
+echo 'I luv dogs';
 EOF
-        )->addAssertExpression(
-            "source('index.php').assertContains('BLAH')"
         );
         $result = new Result($activity);
-        $result->setOutput('I <3 Puppies!!!');
-        $result->setValidationError('Incorrect');
+        $result->setOutput('I luv dogs');
+        $result->setGradingError('I don\'t see "I luv kittens" in the output.');
 
-        $tests[] = array($activity, $result);
+        $tests['incorrect_simple'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('php', 'index.php');
+        $activity = $this->createActivity('CreateVariableCoding');
         $activity->addInputFile('index.php', <<<EOF
 <?php
 
@@ -127,75 +141,75 @@ EOF
         );
         $result = new Result($activity);
         $result->setOutput(null);
-        $result->setLanguageError("PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in index.php on line 3\n");
+        $result->setLanguageError("PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in index.php on line 3");
 
         $tests['php_syntax_error'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('twig', 'show.twig');
-        $activity->addInputFile('show.twig', <<<EOF
-<h1>{{ name|upper }}</h1>
+        $activity = $this->createActivity('TwigPrintVariable');
+        $activity->addInputFile('homepage.twig', <<<EOF
+<h2>{{ whatIWantForXmas }}</h2>
 EOF
-        )->setContextSource('return array("name" => "Dag");');
+        );
         $result = new Result($activity);
-        $result->setOutput('<h1>DAG</h1>');
+        $result->setOutput('<h2>Puppy</h2>');
 
-        $tests[] = array($activity, $result);
+        $tests['twig_correct_simple'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('twig', 'show.twig');
-        $activity->addInputFile('show.twig', <<<EOF
-<h1>{{ bacon }}</h1>
+        $activity = $this->createActivity('TwigPrintVariable');
+        $activity->addInputFile('homepage.twig', <<<EOF
+<h2>{{ bacon }}</h2>
 EOF
-        )->setContextSource('return array("name" => "Dag");');
+        );
         $result = new Result($activity);
         $result->setOutput('');
-        $result->setLanguageError('Variable "bacon" does not exist in "show.twig" at line 1');
+        $result->setLanguageError('Variable "bacon" does not exist in "homepage.twig" at line 1');
         $tests['twig_bad_variable'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('twig', 'show.twig');
-        $activity->addInputFile('show.twig', <<<EOF
+        $activity = $this->createActivity('TwigPrintVariable');
+        $activity->addInputFile('homepage.twig', <<<EOF
 <h1>{{ 'foo }}</h1>
 EOF
-        )->setContextSource('return array("name" => "Dag");');
+        );
         $result = new Result($activity);
         $result->setOutput('');
-        $result->setLanguageError('Unexpected character "\'" in "show.twig" at line 1');
+        $result->setLanguageError('Unexpected character "\'" in "homepage.twig" at line 1');
         $tests['twig_syntax_error'] = array($activity, $result);
 
 
         /* TEST START */
-        $activity = new Activity('twig', 'show.twig');
-        $activity->addInputFile('show.twig', <<<EOF
-<h1>{{ name|upper }}</h1>
+        $activity = $this->createActivity('TwigPrintVariable');
+        $activity->addInputFile('homepage.twig', <<<EOF
+<h1>{{ whatIWantForXmas }}</h1>
 EOF
-        )->setContextSource('return array("name" => "Dag");')
-        ->addAssertExpression(
-            "source('show.twig').assertContains('name')"
         );
         $result = new Result($activity);
-        $result->setOutput('<h1>DAG</h1>');
-        $tests['twig_successful_validation'] = array($activity, $result);
-
-
-        /* TEST START */
-        $activity = new Activity('twig', 'show.twig');
-        $activity->addInputFile('show.twig', <<<EOF
-<h1>{{ name|upper }}</h1>
-EOF
-        )->setContextSource('return array("name" => "Dag");')
-        ->addAssertExpression(
-            "source('show.twig').assertContains('lower')"
-        );
-        $result = new Result($activity);
-        $result->setOutput('<h1>DAG</h1>');
-        $result->setValidationError('Incorrect');
-        $tests['twig_successful_validation'] = array($activity, $result);
+        $result->setOutput('<h1>Puppy</h1>');
+        $result->setGradingError('I don\'t see any "h2" HTML element with the text "Puppy" in it.');
+        $tests['twig_grading_error'] = array($activity, $result);
 
         return $tests;
+    }
+
+    /**
+     * Shortcut to create a challenge from the Fixtures/Challenges directory
+     *
+     * @param $className
+     * @return Activity
+     */
+    private function createActivity($className)
+    {
+        $createVariableCodingPath = __DIR__.sprintf('/Fixtures/Challenges/%s.php', $className);
+        require_once $createVariableCodingPath;
+
+        return new Activity(
+            'Challenge\\'.$className,
+            file_get_contents($createVariableCodingPath)
+        );
     }
 }

@@ -3,42 +3,25 @@
 namespace KnpU\ActivityRunner;
 
 use Doctrine\Common\Collections\Collection;
+use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 
-/**
- * @author Kristen Gilden <kristen.gilden@knplabs.com>
- */
 class Activity
 {
-    /**
-     * Logical name of the file to be considered as the entry point.
-     *
-     * @var string
-     */
-    private $entryPointFilename;
-
     /**
      * @var Collection
      */
     private $inputFiles = array();
 
-    /**
-     * @var string
-     */
-    private $workerName;
+    private $challengeClassName;
 
-    private $assertExpressions = array();
+    private $challengeClassContents;
 
-    /**
-     * @var string Any PHP code that should be run beforehand
-     *
-     * This exact implementation of this is left up to each worker
-     */
-    private $contextSource;
+    private $challengeObject;
 
-    public function __construct($workerName, $entryPointFilename)
+    public function __construct($challengeClassName, $challengeClassContents)
     {
-        $this->workerName = $workerName;
-        $this->entryPointFilename = $entryPointFilename;
+        $this->challengeClassName = $challengeClassName;
+        $this->challengeClassContents = $challengeClassContents;
     }
 
     public function addInputFile($filename, $source)
@@ -48,12 +31,14 @@ class Activity
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getEntryPointFilename()
+    public function getChallengeClassName()
     {
-        return $this->entryPointFilename;
+        return $this->challengeClassName;
+    }
+
+    public function getChallengeClassContents()
+    {
+        return $this->challengeClassContents;
     }
 
     public function getInputFiles()
@@ -61,32 +46,27 @@ class Activity
         return $this->inputFiles;
     }
 
-    public function getWorkerName()
+    /**
+     * @return CodingChallengeInterface
+     */
+    public function getChallengeObject()
     {
-        return $this->workerName;
-    }
+        if ($this->challengeObject === null) {
+            $className = $this->challengeClassName;
+            if (!class_exists($className)) {
+                $classContents = trim($this->challengeClassContents);
+                // look for <?php
+                if (substr($classContents, 0, 5) == '<?php') {
+                    $classContents = substr($classContents, 5);
+                }
 
-    public function addAssertExpression($assertExpression)
-    {
-        $this->assertExpressions[] = $assertExpression;
+                // yep - we're doing this
+                eval($classContents);
+            }
 
-        return $this;
-    }
+            $this->challengeObject = new $className();
+        }
 
-    public function getAssertExpressions()
-    {
-        return $this->assertExpressions;
-    }
-
-    public function getContextSource()
-    {
-        return $this->contextSource;
-    }
-
-    public function setContextSource($contextSource)
-    {
-        $this->contextSource = $contextSource;
-
-        return $this;
+        return $this->challengeObject;
     }
 }

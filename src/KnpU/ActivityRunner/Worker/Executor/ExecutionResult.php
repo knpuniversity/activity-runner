@@ -16,6 +16,11 @@ class ExecutionResult
      */
     private $languageError;
 
+    /**
+     * @var string
+     */
+    private $gradingError;
+
     public function __construct($codeDirectory)
     {
         $this->codeDirectory = $codeDirectory;
@@ -53,5 +58,20 @@ class ExecutionResult
     public function getCodeDirectory()
     {
         return $this->codeDirectory;
+    }
+
+    public function getGradingError()
+    {
+        return $this->gradingError;
+    }
+
+    public function setGradingError($gradingError)
+    {
+        $this->gradingError = $gradingError;
+    }
+
+    public function isCorrect()
+    {
+        return !$this->getLanguageError() && !$this->getGradingError();
     }
 }

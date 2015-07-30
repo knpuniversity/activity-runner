@@ -17,21 +17,12 @@ class Result
     /**
      * @var array
      */
-    protected $validationError;
+    protected $gradingError;
 
     /**
      * @var string
      */
     protected $languageError;
-
-    /**
-     * Key-value of what files look like after running the process
-     *
-     * This is useful if the script writes to some files
-     *
-     * @var array
-     */
-    protected $finalFileContents = array();
 
     public function __construct(Activity $activity)
     {
@@ -55,11 +46,11 @@ class Result
     }
 
     /**
-     * @param string $validationError
+     * @param string $gradingError
      */
-    public function setValidationError($validationError)
+    public function setGradingError($gradingError)
     {
-        $this->validationError = $validationError;
+        $this->gradingError = $gradingError;
     }
 
     /**
@@ -75,19 +66,14 @@ class Result
      *
      * @return bool
      */
-    public function isValid()
+    public function isCorrect()
     {
-        return !$this->validationError && !$this->languageError;
+        return !$this->gradingError && !$this->languageError;
     }
 
-    public function addFinalFileContents($filename, $contents)
+    public function getGradingError()
     {
-        $this->finalFileContents[$filename] = $contents;
-    }
-
-    public function getValidationError()
-    {
-        return $this->validationError;
+        return $this->gradingError;
     }
 
     public function getLanguageError()

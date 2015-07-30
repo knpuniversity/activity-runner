@@ -17,7 +17,9 @@ $app->register(new Silex\Provider\MonologServiceProvider(), array(
 
 $app['activity_runner'] = $app->share(function ($app) {
     $activityRunner = new KnpU\ActivityRunner\ActivityRunner(
-        $app['worker_bag']
+        $app['worker_bag'],
+        $app['twig'],
+        $app['root_dir']
     );
 
     return $activityRunner;
@@ -39,10 +41,7 @@ $app['worker_bag'] = $app->share(function ($app) {
 });
 
 $app['worker.php'] = $app->share(function ($app) {
-    $worker = new KnpU\ActivityRunner\Worker\PhpWorker(
-        $app['filesystem'],
-        $app['php_parser']
-    );
+    $worker = new KnpU\ActivityRunner\Worker\PhpWorker();
 
     return $worker;
 });

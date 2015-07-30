@@ -1,0 +1,8 @@
+{#
+Writes PHP code that's used to render twig templates for the TwigWorker
+#}
+use KnpU\ActivityRunner\Worker\Executor\TwigExecutor;
+
+$entryPointFilename = '{{ entryPointFilename }}';
+$twigExecutor = new TwigExecutor(__DIR__);
+$twigExecutor->executeTwig($entryPointFilename, $context, $codingExecutionResult);

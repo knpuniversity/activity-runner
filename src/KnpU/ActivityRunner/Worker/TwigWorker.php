@@ -31,46 +31,16 @@ class TwigWorker implements WorkerInterface
         $this->projectRootDir = $projectRootDir;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function execute(Activity $activity)
+    public function getInlineCodeToExecute(\Twig_Environment $twig, Activity $activity)
     {
-        $inputFiles = $activity->getInputFiles();
-        $entryPointFilename = $activity->getEntryPointFilename();
+        $challenge = $activity->getChallengeObject();
 
-        $twigRenderingCode = $this->twig->render('twig_worker.render.php.twig', array(
-            'context' => $activity->getContextSource(),
-            'entryPointFilename' => $entryPointFilename,
-            'projectPath'  => $this->projectRootDir
-        ));
-        $inputFiles['twigWorkerRender.php'] = $twigRenderingCode;
-
-        $codeExecutor = new CodeExecutor($inputFiles, 'twigWorkerRender.php');
-        $executionResult = $codeExecutor->executePhpProcess();
-
-        // unless we had a syntax error, the output should be a serialized ExecutionResult
-        // of what happened internally. If so, we use that - it'll contain Twig error
-        // details, etc
-        if (!$executionResult->getOutput()) {
-            throw new \Exception(sprintf(
-                'Problem running Twig! "%s"',
-                $executionResult->getLanguageError()
-            ));
-        }
-
-        $executionResult = unserialize($executionResult->getOutput());
-        if ($executionResult === false) {
-            throw new \Exception(sprintf(
-                'Problem running Twig! Got non-serialized output: "%s"'
-            ));
-        }
-
-        $result = new Result($activity);
-        $result->setLanguageError($executionResult->getLanguageError());
-        $result->setOutput($executionResult->getOutput());
-
-        return $result;
+        return $twig->render(
+            'twig_worker.php.twig',
+            array(
+                'entryPointFilename' => $challenge->getFileBuilder()->getEntryPointFilename()
+            )
+        );
     }
 
     /**
@@ -78,14 +48,6 @@ class TwigWorker implements WorkerInterface
      */
     public function getName()
     {
-        return 'twig';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function supports($fileName, array $context)
-    {
-        return substr($fileName, -5) === '.twig';
+        return 'twig_normal';
     }
 }

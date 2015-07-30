@@ -1,0 +1,50 @@
+{#
+    Skeleton for executing code
+#}
+<?php
+
+use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Worker\Executor\ExecutionResult;
+use KnpU\ActivityRunner\Worker\Executor\Grader;
+use Symfony\Component\Debug\Debug;
+
+require '{{ projectPath }}/vendor/autoload.php';
+
+// makes all notices/warning into exceptions, which is good!
+Debug::enable();
+
+require __DIR__.'/{{ challengeFilename }}';
+
+$challenge = new {{ challengeClassName }}();
+$context = new CodingContext();
+$challenge->setupContext($context);
+
+// 1) Need $context
+// 2) Need contents of all files (except this one)
+// 3)
+
+$codingExecutionResult = unserialize(file_get_contents(__DIR__.'/executionResult.cache'));
+
+{#
+    This is all of the stuff that's specific to the worker:
+        * doing something with $context
+        * calling your code
+        * update $codingExecutionResult
+        * calling $grader->grade($result, $challenge);
+        * json_encode what you get back
+#}
+{{ workerSource|raw }}
+
+// only grade if there wasn't a language error
+if (!$codingExecutionResult->getLanguageError()) {
+    $grader = new Grader();
+    $grader->grade($codingExecutionResult, $challenge);
+}
+
+// create the ExecutionResult!
+$result = new ExecutionResult(__DIR__);
+$result->setOutput($codingExecutionResult->getOutput());
+$result->setLanguageError($codingExecutionResult->getLanguageError());
+$result->setGradingError($codingExecutionResult->getGradingError());
+
+echo serialize($result);
