@@ -2,7 +2,7 @@
 
 namespace KnpU\ActivityRunner\Activity;
 
-use KnpU\ActivityRunner\Activity\CodingChallenge\MultipleChoice\AnswerBuilder;
+use KnpU\ActivityRunner\Activity\MultipleChoice\AnswerBuilder;
 
 interface MultipleChoiceChallengeInterface extends ChallengeInterface
 {

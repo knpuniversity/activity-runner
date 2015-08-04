@@ -1,6 +1,6 @@
 <?php
 
-namespace KnpU\ActivityRunner\Activity\CodingChallenge\MultipleChoice;
+namespace KnpU\ActivityRunner\Activity\MultipleChoice;
 
 class AnswerBuilder
 {
@@ -46,4 +46,17 @@ class AnswerBuilder
         return $this->answers[$this->correctAnswerIndex];
     }
 
+    /**
+     * @param string $sha
+     * @return bool
+     */
+    public function isAnswerCorrect($sha)
+    {
+        return $this->correctAnswerIndex == $sha;
+    }
+
+    public function getAnswers()
+    {
+        return $this->answers;
+    }
 }
