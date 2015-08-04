@@ -80,8 +80,12 @@ class CodeExecutor
                     $result->setLanguageError($process->getOutput());
                 }
             }
+
+            $this->tearDown($this->currentBaseDir, $this->filesystem);
         } catch (RuntimeException $e) {
             $result = new ExecutionResult($this->currentBaseDir);
+
+            $this->tearDown($this->currentBaseDir, $this->filesystem);
 
             // A timeout is not an exceptional case. Since the validation
             // errors would be overwritten by the asserter, the message has
@@ -91,9 +95,13 @@ class CodeExecutor
             } else {
                 throw $e;
             }
+        }
+        /*
+         * Server is not on 5.5 yet
         } finally {
             $this->tearDown($this->currentBaseDir, $this->filesystem);
         }
+        */
 
         /*
         // add in all the finished contents of the directory
