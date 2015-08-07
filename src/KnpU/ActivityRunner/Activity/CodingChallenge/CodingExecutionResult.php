@@ -167,6 +167,7 @@ class CodingExecutionResult
      */
     private function stringContains($haystack, $needle, $caseSensitive = false)
     {
+        $needle = (string) $needle;
         if ($caseSensitive) {
             $position = strpos($haystack, $needle);
         } else {
