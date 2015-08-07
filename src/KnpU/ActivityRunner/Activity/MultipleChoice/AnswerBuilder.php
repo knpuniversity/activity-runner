@@ -55,6 +55,11 @@ class AnswerBuilder
         return $this->correctAnswerIndex == $sha;
     }
 
+    public function getCorrectAnswerIndex()
+    {
+        return $this->correctAnswerIndex;
+    }
+
     public function getAnswers()
     {
         return $this->answers;
