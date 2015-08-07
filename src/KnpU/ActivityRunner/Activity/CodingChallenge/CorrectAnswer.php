@@ -15,4 +15,9 @@ class CorrectAnswer
 
         return $this;
     }
+
+    public function getFiles()
+    {
+        return $this->files;
+    }
 }
