@@ -3,6 +3,7 @@
 namespace Challenge;
 
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CorrectAnswer;
 use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
 use KnpU\ActivityRunner\Activity\Exception\GradingException;
@@ -57,5 +58,21 @@ EOF
         $result->assertElementContains('h2', $expected);
         $result->assertInputContains('index.php', 'echo');
         $result->assertInputContains('index.php', '$whatILove');
+    }
+
+    /**
+     * @return CorrectAnswer
+     */
+    public function getCorrectAnswer()
+    {
+        $correctAnswer = new CorrectAnswer();
+        $correctAnswer->setFileContents('index.php', <<<EOF
+<h2>
+    <?php echo \$whatILove; ?>
+</h2>
+EOF
+        );
+
+        return $correctAnswer;
     }
 }

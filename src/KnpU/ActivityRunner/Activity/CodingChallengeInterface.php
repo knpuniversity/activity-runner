@@ -3,6 +3,7 @@
 namespace KnpU\ActivityRunner\Activity;
 
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CorrectAnswer;
 use KnpU\ActivityRunner\Activity\Exception\GradingException;
 use KnpU\ActivityRunner\Activity\CodingChallenge\FileBuilder;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
@@ -45,4 +46,9 @@ interface CodingChallengeInterface extends ChallengeInterface
      * @throws GradingException If there are any grading problems
      */
     public function grade(CodingExecutionResult $result);
+
+    /**
+     * @return CorrectAnswer
+     */
+    public function getCorrectAnswer();
 }

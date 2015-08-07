@@ -3,6 +3,7 @@
 namespace Challenge;
 
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CorrectAnswer;
 use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
 use KnpU\ActivityRunner\Activity\Exception\GradingException;
@@ -50,5 +51,21 @@ EOF
         $result->assertOutputContains($expected);
         $result->assertElementContains('h2', $expected);
         $result->assertInputContains('homepage.twig', 'whatIWantForXmas');
+    }
+
+    /**
+     * @return CorrectAnswer
+     */
+    public function getCorrectAnswer()
+    {
+        $correctAnswer = new CorrectAnswer();
+        $correctAnswer->setFileContents('homepage.twig', <<<EOF
+<h2>
+    {{ whatIWantForXmas }}
+</h2>
+EOF
+        );
+
+        return $correctAnswer;
     }
 }

@@ -3,6 +3,7 @@
 namespace Challenge;
 
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CorrectAnswer;
 use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
 use KnpU\ActivityRunner\Activity\Exception\GradingException;
@@ -57,4 +58,24 @@ EOF
         $result->assertVariableEquals('airpupTag', $expected);
         $result->assertInputContains('index.php', 'echo');
     }
+
+    /**
+     * @return CorrectAnswer
+     */
+    public function getCorrectAnswer()
+    {
+        $correctAnswer = new CorrectAnswer();
+        $correctAnswer->setFileContents('index.php', <<<EOF
+<?php \$airpupTag = 'I luv kittens'; ?>
+
+<h2>
+    <?php echo \$airpupTag; ?>
+</h2>
+EOF
+        );
+
+        return $correctAnswer;
+    }
+
+
 }
