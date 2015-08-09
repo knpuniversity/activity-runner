@@ -25,7 +25,7 @@ class CorrectAnswer
         $type = File::determineFileType($filename);
         $file = new File($filename, $contents, $type);
 
-        $this->files[] = $file;
+        $this->files[$filename] = $file;
 
         return $this;
     }
