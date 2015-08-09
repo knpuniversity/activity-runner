@@ -48,7 +48,8 @@ interface CodingChallengeInterface extends ChallengeInterface
     public function grade(CodingExecutionResult $result);
 
     /**
-     * @param CorrectAnswer $correctAnswer
+     * @param CorrectAnswer $correctAnswer A correct answer already filled in
+     *                                     with the starting files from getFileBuilder()
      * @return void
      */
     public function configureCorrectAnswer(CorrectAnswer $correctAnswer);
