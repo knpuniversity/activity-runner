@@ -59,12 +59,8 @@ EOF
         $result->assertInputContains('index.php', 'echo');
     }
 
-    /**
-     * @return CorrectAnswer
-     */
-    public function getCorrectAnswer()
+    public function configureCorrectAnswer(CorrectAnswer $correctAnswer)
     {
-        $correctAnswer = new CorrectAnswer();
         $correctAnswer->setFileContents('index.php', <<<EOF
 <?php \$airpupTag = 'I luv kittens'; ?>
 

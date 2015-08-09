@@ -34,4 +34,18 @@ class File
     {
         return $this->fileType;
     }
+
+    public static function determineFileType($filename)
+    {
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+
+        switch ($ext) {
+            case 'php':
+                return File::TYPE_PHP;
+            case 'twig':
+                return File::TYPE_TWIG;
+            default:
+                throw new \InvalidArgumentException(sprintf('Unsupported type for file "%s"', $filename));
+        }
+    }
 }

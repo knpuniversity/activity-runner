@@ -48,7 +48,8 @@ interface CodingChallengeInterface extends ChallengeInterface
     public function grade(CodingExecutionResult $result);
 
     /**
-     * @return CorrectAnswer
+     * @param CorrectAnswer $correctAnswer
+     * @return void
      */
-    public function getCorrectAnswer();
+    public function configureCorrectAnswer(CorrectAnswer $correctAnswer);
 }

@@ -42,7 +42,7 @@ class FileBuilder
      */
     public function addFileContents($filename, $contents)
     {
-        $type = self::determineFileType($filename);
+        $type = File::determineFileType($filename);
         $file = new File($filename, $contents, $type);
 
         $this->files[] = $file;
@@ -54,20 +54,6 @@ class FileBuilder
     public function getFiles()
     {
         return $this->files;
-    }
-
-    private static function determineFileType($filename)
-    {
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
-
-        switch ($ext) {
-            case 'php':
-                return File::TYPE_PHP;
-            case 'twig':
-                return File::TYPE_TWIG;
-            default:
-                throw new \InvalidArgumentException(sprintf('Unsupported type for file "%s"', $filename));
-        }
     }
 
     public function getEntryPointFilename()

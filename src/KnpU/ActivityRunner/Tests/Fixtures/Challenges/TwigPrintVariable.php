@@ -53,12 +53,8 @@ EOF
         $result->assertInputContains('homepage.twig', 'whatIWantForXmas');
     }
 
-    /**
-     * @return CorrectAnswer
-     */
-    public function getCorrectAnswer()
+    public function configureCorrectAnswer(CorrectAnswer $correctAnswer)
     {
-        $correctAnswer = new CorrectAnswer();
         $correctAnswer->setFileContents('homepage.twig', <<<EOF
 <h2>
     {{ whatIWantForXmas }}

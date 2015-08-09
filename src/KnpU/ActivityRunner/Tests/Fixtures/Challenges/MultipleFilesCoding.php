@@ -60,12 +60,8 @@ EOF
         $result->assertInputContains('index.php', '$whatILove');
     }
 
-    /**
-     * @return CorrectAnswer
-     */
-    public function getCorrectAnswer()
+    public function configureCorrectAnswer(CorrectAnswer $correctAnswer)
     {
-        $correctAnswer = new CorrectAnswer();
         $correctAnswer->setFileContents('index.php', <<<EOF
 <h2>
     <?php echo \$whatILove; ?>
