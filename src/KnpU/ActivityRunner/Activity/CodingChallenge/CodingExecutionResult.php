@@ -55,10 +55,10 @@ class CodingExecutionResult
         list($variableName, $propertyAccessString) = self::splitVariableAndAccessorString($variableKey);
 
         if (!$this->isVariableDeclared($variableName)) {
-            throw new GradingException(sprintf('Variable "%s" was never defined!', $variableName));
+            throw new GradingException(sprintf('The variable "%s" is not defined', $variableName));
         }
 
-        $value = $this->declaredVariables[$variableKey];
+        $value = $this->declaredVariables[$variableName];
 
         if (!$propertyAccessString) {
             return $value;
@@ -157,11 +157,9 @@ class CodingExecutionResult
 
     public function assertVariableEquals($variableName, $expectedValue, $gradingErrorMessage = null)
     {
-        $this->assertVariableExists($variableName);
-
         if ($gradingErrorMessage === null) {
             $gradingErrorMessage = sprintf(
-                'The `%s` variable exists, but is not set to %s',
+                'The `$%s` variable exists, but is not set to %s',
                 $variableName,
                 $expectedValue
             );
