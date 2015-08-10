@@ -92,6 +92,23 @@ class CodingExecutionResult
     }
 
     /**
+     * Returns the text in the *first* matched element
+     *
+     * @param $cssSelector
+     * @return string|false if the element is not found
+     */
+    public function getElementText($cssSelector)
+    {
+        $eles = $this->getCrawler()->filter($cssSelector);
+
+        if (count($eles) === 0) {
+            return false;
+        }
+
+        return $eles->text();
+    }
+
+    /**
      * Assert text is found somewhere inside the CSS selector
      *
      * @param string $cssSelector e.g. h2
