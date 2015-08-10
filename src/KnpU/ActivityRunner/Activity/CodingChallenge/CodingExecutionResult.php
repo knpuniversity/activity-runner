@@ -137,6 +137,22 @@ class CodingExecutionResult
         }
     }
 
+    public function assertFunctionExists($functionName, $gradingErrorMessage = null)
+    {
+        if ($gradingErrorMessage === null) {
+            $gradingErrorMessage = sprintf(
+                'The `%s` function does not exist - do you create it?',
+                $functionName
+            );
+        }
+
+        // this works because grading happens in the same PHP thread as execution
+        // so if the user created a function, it literally still exists
+        if (!function_exists($functionName)) {
+            throw new GradingException($gradingErrorMessage);
+        }
+    }
+
     /**
      * Assert that the user created this variable
      *
