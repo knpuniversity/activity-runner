@@ -4,6 +4,8 @@ namespace KnpU\ActivityRunner\Activity\CodingChallenge;
 
 use KnpU\ActivityRunner\Activity\Exception\GradingException;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\PropertyAccess\Exception\AccessException;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
  * Used inside the eval'ed scripts themselves to summarize what happened
@@ -44,16 +46,27 @@ class CodingExecutionResult
     }
 
     /**
-     * @param string $variableName
+     * @param $variableKey
      * @return mixed
+     * @throws GradingException
      */
-    public function getDeclaredVariableValue($variableName)
+    public function getDeclaredVariableValue($variableKey)
     {
+        list($variableName, $propertyAccessString) = self::splitVariableAndAccessorString($variableKey);
+
         if (!$this->isVariableDeclared($variableName)) {
-            throw new \LogicException(sprintf('Variable "%s" was never defined!', $variableName));
+            throw new GradingException(sprintf('Variable "%s" was never defined!', $variableName));
         }
 
-        return $this->declaredVariables[$variableName];
+        $value = $this->declaredVariables[$variableKey];
+
+        if (!$propertyAccessString) {
+            return $value;
+        }
+
+        $accessor = PropertyAccess::createPropertyAccessor();
+
+        return $accessor->getValue($value, $propertyAccessString);
     }
 
     public function getOutput()
@@ -200,6 +213,47 @@ class CodingExecutionResult
         }
 
         return $this->inputFiles[$filename];
+    }
+
+    /**
+     * Helper to split between the variable name and property access spot
+     *
+     *      foo         => array('foo', null)
+     *      foo.bar     => array('foo', 'bar')
+     *      foo[bar]    => array('foo', '[bar]')
+     *      foo.bar[2]  => array('foo', 'bar[2]')
+     *
+     * @param string $variableKey
+     * @return array
+     */
+    static private function splitVariableAndAccessorString($variableKey)
+    {
+        $bracketPos = strpos($variableKey, '[');
+        $dotPos = strpos($variableKey, '.');
+
+        // neither appear, so we have a simple variable name
+        if ($bracketPos === false && $dotPos === false) {
+            return array($variableKey, null);
+        }
+
+        // find the position of the first . or [
+        if ($bracketPos !== false && $dotPos !== false) {
+            $firstPos = min($bracketPos, $dotPos);
+        } elseif ($bracketPos !== false) {
+            $firstPos = $bracketPos;
+        } else {
+            $firstPos = $dotPos;
+        }
+
+        $variableName = substr($variableKey, 0, $firstPos);
+        $propertyAccessKey = substr($variableKey, $firstPos);
+
+        // converts .firstName to just firstName. But leave [firstName] as [firstName]
+        if (substr($propertyAccessKey, 0, 1) === '.') {
+            $propertyAccessKey = substr($propertyAccessKey, 1);
+        }
+
+        return array($variableName, $propertyAccessKey);
     }
 
     /*
