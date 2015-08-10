@@ -16,6 +16,7 @@ class AnswerBuilder
      */
     public function addAnswer($text, $isCorrect = false)
     {
+        $text = $this->textifyAnswer($text);
         $key = md5($text);
         $this->answers[$key] = $text;
 
@@ -64,4 +65,29 @@ class AnswerBuilder
     {
         return $this->answers;
     }
+
+    /**
+     * Tries to make sure answers are in a decent format for displaying
+     *
+     * @param $answer
+     * @return string
+     */
+    private function textifyAnswer($answer)
+    {
+        if ($answer === true) {
+            return 'true';
+        }
+
+        if ($answer === false) {
+            return 'false';
+        }
+
+        if ($answer === 0) {
+            // even returning the string 0 isn't printing well
+            return '0&nbsp;';
+        }
+
+        return (string) $answer;
+    }
+
 }
