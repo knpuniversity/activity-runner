@@ -6,6 +6,7 @@ class File
 {
     const TYPE_PHP = 'php';
     const TYPE_TWIG = 'twig';
+    const TYPE_JSON = 'json';
 
     private $filename;
 
@@ -44,6 +45,8 @@ class File
                 return File::TYPE_PHP;
             case 'twig':
                 return File::TYPE_TWIG;
+            case 'json':
+                return File::TYPE_JSON;
             default:
                 throw new \InvalidArgumentException(sprintf('Unsupported type for file "%s"', $filename));
         }
