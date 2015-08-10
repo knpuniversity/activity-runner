@@ -194,7 +194,7 @@ class CodingExecutionResult
             $gradingErrorMessage = sprintf(
                 'The `$%s` variable exists, but is not set to %s',
                 $variableName,
-                $expectedValue
+                var_export($expectedValue, true)
             );
         }
 
