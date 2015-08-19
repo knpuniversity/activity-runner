@@ -16,13 +16,10 @@ Debug::enable();
 require __DIR__.'/{{ challengeFilename }}';
 
 $challenge = new {{ challengeClassName }}();
-$context = new CodingContext();
+$context = new CodingContext(__DIR__);
 $challenge->setupContext($context);
 
-// 1) Need $context
-// 2) Need contents of all files (except this one)
-// 3)
-
+// this is the written CodingExecutionResult, with the inputFiles setup in it
 $codingExecutionResult = unserialize(file_get_contents(__DIR__.'/executionResult.cache'));
 
 {#
