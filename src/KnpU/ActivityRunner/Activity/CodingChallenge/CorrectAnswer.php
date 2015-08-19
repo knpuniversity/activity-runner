@@ -13,7 +13,7 @@ class CorrectAnswer
     {
         $answer = new static();
 
-        foreach ($builder->getFiles() as $file) {
+        foreach ($builder->getFileContents() as $file) {
             $answer->setFileContents($file->getFilename(), $file->getContents());
         }
 

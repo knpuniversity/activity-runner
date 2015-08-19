@@ -6,7 +6,15 @@ class FileBuilder
 {
     private $entryPointFilename;
 
+    /**
+     * @var File[]
+     */
     private $files = array();
+
+    private $fileSourcePaths = array();
+
+    // 1) what are all the local filenames we know of
+    // 2) what are the contents of each
 
     /**
      * What's the filename that should be executed first
@@ -27,11 +35,10 @@ class FileBuilder
      */
     public function addFile($filename, $path)
     {
-        if (!file_exists($path)) {
-            throw new \InvalidArgumentException(sprintf('File "%s" not found', $path));
-        }
-
-        $this->addFileContents($filename, file_get_contents($path));
+        // add this as a file, but don't set its contents automatically
+        $this->files[$filename] = null;
+        // record where the file *should* be on the filesystem, in case we want to read it
+        $this->fileSourcePaths[$filename] = $path;
     }
 
     /**
@@ -45,15 +52,29 @@ class FileBuilder
         $type = File::determineFileType($filename);
         $file = new File($filename, $contents, $type);
 
-        $this->files[] = $file;
+        $this->files[$filename] = $file;
     }
 
-    /**
-     * @return File[]
-     */
-    public function getFiles()
+    public function getFileContents($filename)
     {
-        return $this->files;
+        if (!array_key_exists($filename, $this->files)) {
+            throw new \LogicException(sprintf('Unknown file "%s"', $filename));
+        }
+
+        if ($this->files[$filename] === null) {
+            // initialize the contents!
+            $this->addFileContents(
+                $filename,
+                file_get_contents($this->fileSourcePaths[$filename])
+            );
+        }
+
+        return $this->files[$filename];
+    }
+
+    public function getFilenames()
+    {
+        return array_keys($this->files);
     }
 
     public function getEntryPointFilename()
@@ -63,7 +84,9 @@ class FileBuilder
         }
 
         if (count($this->files) == 1) {
-            return $this->files[0]->getFilename();
+            $files = $this->files;
+            reset($files);
+            return key($files);
         }
 
         throw new \LogicException('No entry point filename given!');

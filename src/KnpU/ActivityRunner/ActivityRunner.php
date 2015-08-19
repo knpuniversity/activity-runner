@@ -135,13 +135,16 @@ class ActivityRunner
         $fileBuilder = $challenge->getFileBuilder();
 
         $files = array();
-        // 1) get the original files first
-        foreach ($fileBuilder->getFiles() as $file) {
-            $files[$file->getFilename()] = $file->getContents();
-        }
-        // 2) get the overrides
-        foreach ($activity->getInputFiles() as $filename => $contents) {
-            $files[$filename] = $contents;
+
+        // loop through *all* of the files in the builder - this should be the full set
+        foreach ($fileBuilder->getFilenames() as $filename) {
+            // look first to see if an input file was sent
+            if ($activity->hasInputFile($filename)) {
+                $files[$filename] = $activity->getInputFileContents($filename);
+            } else {
+                // fallback to get the original file contents
+                $fileBuilder->getFileContents($filename);
+            }
         }
 
         return $files;

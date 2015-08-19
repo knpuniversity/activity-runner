@@ -38,9 +38,18 @@ class Activity
         return $this->challengeClassContents;
     }
 
-    public function getInputFiles()
+    public function hasInputFile($filename)
     {
-        return $this->inputFiles;
+        return array_key_exists($filename, $this->inputFiles);
+    }
+
+    public function getInputFileContents($filename)
+    {
+        if (!$this->hasInputFile($filename)) {
+            throw new \LogicException(sprintf('No input file for "%s"', $filename));
+        }
+
+        return $this->inputFiles[$filename];
     }
 
     /**
