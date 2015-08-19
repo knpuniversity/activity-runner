@@ -92,6 +92,23 @@ class CodingExecutionResult
     }
 
     /**
+     * @param string $needle
+     * @param string $gradingErrorMessage
+     * @param bool|false $caseSensitive
+     * @throws GradingException
+     */
+    public function assertOutputDoesNotContain($needle, $gradingErrorMessage = null, $caseSensitive = false)
+    {
+        if ($this->stringContains($this->getOutput(), $needle, $caseSensitive)) {
+            if ($gradingErrorMessage === null) {
+                $gradingErrorMessage = sprintf('I see "%s" in the output, but it should not be there!', $needle);
+            }
+
+            throw new GradingException($gradingErrorMessage);
+        }
+    }
+
+    /**
      * Returns the text in the *first* matched element
      *
      * @param $cssSelector
@@ -147,7 +164,19 @@ class CodingExecutionResult
         $contents = $this->getInputFileContents($filename);
         if (!$this->stringContains($contents, $string, $caseSensitive)) {
             if ($gradingErrorMessage === null) {
-                $gradingErrorMessage = sprintf('I don\'t see `%s` used in your code', $string);
+                $gradingErrorMessage = sprintf('I don\'t see `%s` used in `%s`', $string, $filename);
+            }
+
+            throw new GradingException($gradingErrorMessage);
+        }
+    }
+
+    public function assertInputDoesNotContain($filename, $string, $gradingErrorMessage = null, $caseSensitive = false)
+    {
+        $contents = $this->getInputFileContents($filename);
+        if ($this->stringContains($contents, $string, $caseSensitive)) {
+            if ($gradingErrorMessage === null) {
+                $gradingErrorMessage = sprintf('I see `%s` used in `%`, but it shouldn\'t be there!', $string, $filename);
             }
 
             throw new GradingException($gradingErrorMessage);
