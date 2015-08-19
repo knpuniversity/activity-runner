@@ -91,6 +91,11 @@ class CodingExecutionResult
         }
     }
 
+    public function doesOutputContain($needle, $caseSensitive = false)
+    {
+        return $this->stringContains($this->getOutput(), $needle, $caseSensitive);
+    }
+
     /**
      * @param string $needle
      * @param string $gradingErrorMessage
