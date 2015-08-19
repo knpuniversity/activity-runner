@@ -7,9 +7,6 @@ use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 
 class Activity
 {
-    /**
-     * @var Collection
-     */
     private $inputFiles = array();
 
     private $challengeClassName;
