@@ -67,6 +67,7 @@ class CodingContext
         }
 
         $request = new FakedRequest($url, $method);
+        $request->addServerVariable('HTTP_USER_AGENT', 'FOO');
 
         $this->fakedRequest = $request;
 

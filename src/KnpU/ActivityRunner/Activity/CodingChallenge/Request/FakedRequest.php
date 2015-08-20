@@ -14,15 +14,27 @@ class FakedRequest
 
     private $postData = array();
 
+    private $server = array();
+
     public function __construct($url, $method)
     {
         $this->uri = $url;
         $this->method = $method;
     }
 
-    public function setPostData($postData)
+    public function setPostData(array $postData)
     {
         $this->postData = $postData;
+    }
+
+    public function addServerVariable($key, $val)
+    {
+        $this->server[strtoupper($key)] = $val;
+    }
+
+    public function addHeader($name, $val)
+    {
+        $this->addServerVariable('HTTP_'.$name, $val);
     }
 
     /**
@@ -38,7 +50,7 @@ class FakedRequest
             $this->postData,
             array(), // cookies
             array(), // files
-            array(), // server
+            $this->server, // server
             null // content
         );
     }
