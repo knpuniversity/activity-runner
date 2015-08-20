@@ -143,7 +143,7 @@ class ActivityRunner
                 $files[$filename] = $activity->getInputFileContents($filename);
             } else {
                 // fallback to get the original file contents
-                $fileBuilder->getFileContents($filename);
+                $fileBuilder->getFileObject($filename);
             }
         }
 

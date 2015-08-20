@@ -55,7 +55,7 @@ class FileBuilder
         $this->files[$filename] = $file;
     }
 
-    public function getFileContents($filename)
+    public function getFileObject($filename)
     {
         if (!array_key_exists($filename, $this->files)) {
             throw new \LogicException(sprintf('Unknown file "%s"', $filename));
