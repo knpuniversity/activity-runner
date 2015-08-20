@@ -1,6 +1,8 @@
 <?php
 
 namespace KnpU\ActivityRunner\Activity\CodingChallenge;
+use KnpU\ActivityRunner\Activity\CodingChallenge\Request\FakedRequest;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Holds information about variables and other things that'll be setup before running code
@@ -15,6 +17,9 @@ class CodingContext
      * @var string
      */
     private $rootFileDir;
+
+    /** @var FakedRequest */
+    private $fakedRequest;
 
     public function __construct($rootFileDir)
     {
@@ -46,8 +51,44 @@ class CodingContext
         require $this->rootFileDir.'/'.$localPath;
     }
 
+    /**
+     * Call this to start configuring a faked request environment
+     *
+     * After calling this, just continue mutating the returned object
+     *
+     * @param string $url
+     * @param string $method
+     * @return FakedRequest
+     */
+    public function fakeHttpRequest($url, $method = 'GET')
+    {
+        if ($this->fakedRequest) {
+            throw new \LogicException('There is already a request being faked!');
+        }
+
+        $request = new FakedRequest($url, $method);
+
+        $this->fakedRequest = $request;
+
+        return $this->fakedRequest;
+    }
+
     public function getVariables()
     {
         return $this->variables;
+    }
+
+    /**
+     * Called right before the code is executed and initializes the environment
+     * (e.g. faking the request environment)
+     *
+     *
+     */
+    public function initialize()
+    {
+        if ($this->fakedRequest) {
+            // create a Request and tell it to override the globals
+            $this->fakedRequest->createRequest()->overrideGlobals();
+        }
     }
 }

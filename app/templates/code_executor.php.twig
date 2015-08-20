@@ -18,6 +18,7 @@ require __DIR__.'/{{ challengeFilename }}';
 $challenge = new {{ challengeClassName }}();
 $context = new CodingContext(__DIR__);
 $challenge->setupContext($context);
+$context->initialize();
 
 // this is the written CodingExecutionResult, with the inputFiles setup in it
 $codingExecutionResult = unserialize(file_get_contents(__DIR__.'/executionResult.cache'));
