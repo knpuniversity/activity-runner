@@ -261,7 +261,10 @@ class CodingExecutionResult
     public function getCrawler()
     {
         if ($this->crawler === null) {
-            $this->crawler = new Crawler($this->getOutput());
+            // http://localhost:8000 is used here so that the Crawler is happy with
+            // selecting forms and links (otherwise it fails in the Link::__construct()
+            // I don't think that has any side effects
+            $this->crawler = new Crawler($this->getOutput(), 'http://localhost:8000');
         }
 
         return $this->crawler;
