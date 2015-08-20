@@ -44,9 +44,9 @@ class TwigExecutor
             $codingExecutionResult->setLanguageError($error->getMessage());
         } catch (\Exception $error) {
             $codingExecutionResult->setLanguageError($error->getMessage());
-        } finally {
-            $errorHandler->restore();
         }
+
+        $errorHandler->restore();
 
         return $codingExecutionResult;
     }
