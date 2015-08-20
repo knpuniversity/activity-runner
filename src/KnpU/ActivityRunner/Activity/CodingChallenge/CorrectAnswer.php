@@ -14,7 +14,11 @@ class CorrectAnswer
         $answer = new static();
 
         foreach ($builder->getFilenames() as $filename) {
-            $answer->setFileContents($filename, $builder->getFilenames());
+            $file = $builder->getFileObject($filename);
+            $answer->setFileContents(
+                $file->getFilename(),
+                $file->getContents()
+            );
         }
 
         return $answer;

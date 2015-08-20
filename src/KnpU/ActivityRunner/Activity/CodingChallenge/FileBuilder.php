@@ -61,13 +61,7 @@ class FileBuilder
             throw new \LogicException(sprintf('Unknown file "%s"', $filename));
         }
 
-        if ($this->files[$filename] === null) {
-            // initialize the contents!
-            $this->addFileContents(
-                $filename,
-                file_get_contents($this->fileSourcePaths[$filename])
-            );
-        }
+        $this->initializeFileObject($filename);
 
         return $this->files[$filename];
     }
@@ -90,5 +84,30 @@ class FileBuilder
         }
 
         throw new \LogicException('No entry point filename given!');
+    }
+
+    /**
+     * Forces all the file contents to be loaded and returns all the File objects
+     *
+     * @return File[]
+     */
+    public function getAllFiles()
+    {
+        foreach ($this->getFilenames() as $filename) {
+            $this->initializeFileObject($filename);
+        }
+
+        return $this->files;
+    }
+
+    private function initializeFileObject($filename)
+    {
+        if ($this->files[$filename] === null) {
+            // initialize the contents!
+            $this->addFileContents(
+                $filename,
+                file_get_contents($this->fileSourcePaths[$filename])
+            );
+        }
     }
 }
