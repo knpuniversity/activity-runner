@@ -18,16 +18,10 @@ use KnpU\ActivityRunner\Worker\Executor\CodeExecutor;
  */
 class TwigWorker implements WorkerInterface
 {
-    /**
-     * @var \Twig_Environment
-     */
-    protected $twig;
-
     private $projectRootDir;
 
-    public function __construct(\Twig_Environment $twig, $projectRootDir)
+    public function __construct($projectRootDir)
     {
-        $this->twig = $twig;
         $this->projectRootDir = $projectRootDir;
     }
 

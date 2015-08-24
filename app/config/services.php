@@ -48,7 +48,6 @@ $app['worker.php'] = $app->share(function ($app) {
 
 $app['worker.twig'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\TwigWorker(
-        $app['twig'],
         $app['root_dir']
     );
 });

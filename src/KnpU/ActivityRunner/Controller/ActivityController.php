@@ -2,13 +2,11 @@
 
 namespace KnpU\ActivityRunner\Controller;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\ActivityRunner;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use KnpU\ActivityRunner\Repository\Repository;
 
 /**
  * @author Kristen Gilden <kristen.gilden@gmail.com>
