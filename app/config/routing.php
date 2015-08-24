@@ -15,3 +15,9 @@ if (!$app instanceof Application) {
 
 $app->get('/status', 'KnpU\\ActivityRunner\\Controller\\ActivityController::statusAction');
 $app->post('/check', 'KnpU\\ActivityRunner\\Controller\\ActivityController::checkAction');
+
+$app->get('/author', 'KnpU\\ActivityRunner\\Controller\\AuthorController::enterFilenameAction');
+$app->get(
+    '/author/activity',
+    'KnpU\\ActivityRunner\\Controller\\AuthorController::renderActivityAction'
+)->bind('render_activity');

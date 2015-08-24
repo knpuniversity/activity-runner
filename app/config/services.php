@@ -7,13 +7,26 @@ if (!$app instanceof \Silex\Application) {
     throw new \LogicException(sprintf('Expected $app to be an instance of \\Pimple, got %s instead.', is_object($app) ? get_class($app) : gettype($app)));
 }
 
-$app['root_dir'] = __DIR__.'/../../';
+/*
+ * Configuration
+ */
 
+$app['root_dir'] = __DIR__.'/../../';
 $logFile = $app['debug'] ? 'dev.log' : 'prod.log';
+
+/*
+ * Service Providers
+ */
+
 $app->register(new Silex\Provider\MonologServiceProvider(), array(
     'monolog.logfile' => __DIR__.'/../logs/'.$logFile,
     'monolog.level'   => $app['debug'] ? Logger::DEBUG : Logger::CRITICAL,
 ));
+$app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
+
+/*
+ * Services
+ */
 
 $app['activity_runner'] = $app->share(function ($app) {
     $activityRunner = new KnpU\ActivityRunner\ActivityRunner(

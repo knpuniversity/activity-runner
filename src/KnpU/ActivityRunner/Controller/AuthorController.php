@@ -1,0 +1,118 @@
+<?php
+
+namespace KnpU\ActivityRunner\Controller;
+
+use KnpU\ActivityRunner\Activity\CodingChallenge\FileBuilder;
+use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
+use Silex\Application;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+class AuthorController
+{
+    /**
+     * Allows the user to enter a directory
+     *
+     * @param Request $request
+     * @param Application $app
+     * @return string
+     */
+    public function enterFilenameAction(Request $request, Application $app)
+    {
+        if ($dir = $request->query->get('filename')) {
+            $url = $app['url_generator']
+                ->generate('render_activity').'?path='.$dir;
+
+            return new RedirectResponse($url);
+
+        }
+
+        $html = $this->getTwig($app)->render('author/enterFilename.twig');
+
+        return new Response($html);
+    }
+
+    public function renderActivityAction(Request $request, Application $app)
+    {
+        $path = $request->query->get('path');
+        if (!$path) {
+            throw new NotFoundHttpException('Missing path!');
+        }
+
+        if (!file_exists($path)) {
+            throw new NotFoundHttpException(sprintf('Bad path "%s"', $path));
+        }
+
+        $rootDir = $this->findRootMetadataDirectory($path);
+        if ($rootDir === null) {
+            throw new \LogicException(sprintf(
+                'Could not find metadata.yml in any parent directory of %s',
+                $path
+            ));
+        }
+
+        // get the path relative to the root directory
+        $relativePath = str_replace($rootDir.'/', '', $path);
+        // turn this into a class name
+        $class = substr(str_replace('/', '\\', $relativePath), 0, -4);
+
+        require $path;
+        if (!class_exists($class)) {
+            throw new \LogicException(sprintf(
+                'Class "%s" was not found after requiring "%s"',
+                $class,
+                $path
+            ));
+        }
+
+        $challenge = new $class();
+        if (!$challenge instanceof CodingChallengeInterface) {
+            throw new \LogicException(sprintf('"%s" does not implement CodingChallengeInterface', $class));
+        }
+
+        $fileBuilder = $challenge->getFileBuilder();
+
+        $html = $this->getTwig($app)->render('author/renderActivity.twig', array(
+            'challenge' => $challenge,
+            'fileBuilder' => $fileBuilder
+        ));
+
+        return new Response($html);
+    }
+
+    /**
+     * @param Application $app
+     * @return \Twig_Environment
+     */
+    private function getTwig(Application $app)
+    {
+        return $app['twig'];
+    }
+
+    private function findRootMetadataDirectory($path)
+    {
+        // in case we're passed a file at first
+        if (!is_dir($path)) {
+            return $this->findRootMetadataDirectory(dirname($path));
+        }
+
+        $finder = new Finder();
+        $finder->in($path)
+            ->name('metadata.yml');
+
+        if (count($finder) > 0) {
+            return $path;
+        }
+
+        $parentDir = dirname($path);
+        if ($parentDir == $path) {
+            // we got to the top directory!
+            return false;
+        }
+
+        return $this->findRootMetadataDirectory($parentDir);
+    }
+}

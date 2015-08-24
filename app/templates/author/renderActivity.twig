@@ -1,0 +1,14 @@
+{% extends 'author/layout.twig' %}
+
+{% block body %}
+    {{ challenge.question }}
+
+    {% for file in fileBuilder.allFiles %}
+        <div>
+            <h3>{{ file.filename }}</h3>
+            <div>
+                {{ file.contents }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
