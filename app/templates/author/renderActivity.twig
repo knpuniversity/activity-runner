@@ -7,24 +7,42 @@
             {{ challenge.question }}
         </h3>
 
-        <div class="js-result">
+        <div class="js-result alert">
         </div>
 
         <div class="row">
             <div class="col-xs-8">
-                {% for file in fileBuilder.allFiles %}
-                    <div class="js-input-files">
-                        <h3>{{ file.filename }}</h3>
-                        <textarea name="{{ file.filename }}"
+                <ul class="nav nav-tabs nav-tabs-dark">
+                    {% for file in fileBuilder.allFiles %}
+                        <li role="presentation" class="{{ loop.first ? 'active' }}">
+                            <a href="#editor-{{ loop.index }}">{{ file.filename }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="js-input-files tab-content">
+                    {% for file in fileBuilder.allFiles %}
+                        <div role="tabpanel"
+                             class="tab-pane {{ loop.first ? 'active' }}"
+                             id="editor-{{ loop.index }}">
+
+                            <textarea name="{{ file.filename }}"
                                   class="js-file form-control">{{ file.contents }}</textarea>
-                    </div>
-                {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
             <div class="col-xs-4">
-                <h3>Output</h3>
+                <ul class="nav nav-tabs nav-tabs-dark">
+                    <li role="presentation" class="active">
+                        <a href="#">Output</a>
+                    </li>
+                </ul>
                 <iframe src="about:blank" frameborder="0" class="js-output"></iframe>
             </div>
         </div>
+
+        <button class="btn btn-primary js-button-grade">Grade</button>
 
         <div>
             <h4>Correct Answer</h4>
@@ -41,8 +59,6 @@
                 {% endfor %}
             </div>
         </div>
-
-        <button class="btn btn-primary js-button-grade">Grade</button>
     </div>
 {% endblock %}
 
@@ -77,6 +93,12 @@
                     '.js-copy-correct-answers',
                     $.proxy(this.handleCopyCorrectAnswersClick, this)
                 );
+
+                this.$wrapper.on(
+                    'click',
+                    '.nav-tabs a',
+                    $.proxy(this._handleFileTabClick, this)
+                );
             },
 
             grade: function() {
@@ -104,12 +126,16 @@
 
                 if (data.isCorrect) {
                     $result.html('<h3>CORRECT!</h3>');
+                    $result.removeClass('alert-danger')
+                        .addClass('alert-success');
                 } else {
                     if (data.errors.validation) {
                         $result.html(data.errors.validation);
                     } else {
                         $result.html(data.errors.language)
                     }
+                    $result.addClass('alert-danger')
+                        .removeClass('alert-success');
                 }
 
                 var $iframe = this.$wrapper.find('.js-output');
@@ -138,7 +164,14 @@
                     $invalidAnswerWrapper.find('[name="'+$(this).attr('name')+'"]')
                         .val($(this).val());
                 });
-            }
+            },
+
+            _handleFileTabClick: function(e) {
+                e.preventDefault();
+
+                var $tab = $(e.currentTarget);
+                $tab.tab('show');
+            },
         });
 
         jQuery(document).ready(function() {

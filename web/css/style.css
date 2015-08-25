@@ -9,3 +9,6 @@
     border: 1px solid #ccc;
     height: 250px;
 }
+.activity-wrapper .nav-tabs {
+    margin-bottom: 10px;
+}
