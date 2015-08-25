@@ -13,7 +13,7 @@
         <div class="row">
             <div class="col-xs-8">
                 {% for file in fileBuilder.allFiles %}
-                    <div>
+                    <div class="js-input-files">
                         <h3>{{ file.filename }}</h3>
                         <textarea name="{{ file.filename }}"
                                   class="js-file form-control">{{ file.contents }}</textarea>
@@ -31,12 +31,14 @@
         <div>
             <h4>Correct Answer</h4>
             <a href="#" class="js-toggle-correct-answer">Toggle Correct Answer</a>
-            <div class="js-correct-answer-hidden" style="display: none;">
+            |
+            <a href="#" class="js-copy-correct-answers">Copy correct answers up</a>
+            <div class="js-correct-answer-wrapper" style="display: none;">
                 {% for file in correctAnswer.files %}
                     <div>
                         <h3>{{ file.filename }}</h3>
                         <textarea name="{{ file.filename }}"
-                                  class="form-control">{{ file.contents }}</textarea>
+                                  class="form-control js-file">{{ file.contents }}</textarea>
                     </div>
                 {% endfor %}
             </div>
@@ -71,6 +73,12 @@
                     '.js-toggle-correct-answer',
                     $.proxy(this._handleToggleCorrectClick, this)
                 );
+
+                this.$wrapper.on(
+                    'click',
+                    '.js-copy-correct-answers',
+                    $.proxy(this.handleCopyCorrectAnswersClick, this)
+                );
             },
 
             grade: function() {
@@ -78,7 +86,7 @@
                     files: {},
                     path: '{{ path }}'
                 };
-                this.$wrapper.find('.js-file').each(function() {
+                this.$wrapper.find('.js-input-files .js-file').each(function() {
                     gradingData.files[$(this).attr('name')] = $(this).val();
                 });
 
@@ -96,11 +104,16 @@
             printGradingResponse: function(data) {
                 var $result = this.$wrapper.find('.js-result');
 
-                if (data.errors.validation) {
-                    $result.html(data.errors.validation);
+                if (data.isCorrect) {
+                    $result.html('<h3>CORRECT!</h3>');
                 } else {
-                    $result.html(data.errors.language)
+                    if (data.errors.validation) {
+                        $result.html(data.errors.validation);
+                    } else {
+                        $result.html(data.errors.language)
+                    }
                 }
+
                 this.$wrapper.find('.js-output').html(
                     data.output
                 );
@@ -115,7 +128,19 @@
             _handleToggleCorrectClick: function(e) {
                 e.preventDefault();
 
-                this.$wrapper.find('.js-correct-answer-hidden').toggle();
+                this.$wrapper.find('.js-correct-answer-wrapper').toggle();
+            },
+
+            handleCopyCorrectAnswersClick: function(e) {
+                e.preventDefault();
+
+                // loop over the correct answers
+                var $invalidAnswerWrapper = this.$wrapper.find('.js-input-files');
+                this.$wrapper.find('.js-correct-answer-wrapper .js-file').each(function() {
+                    // find the same file and copy the contents up
+                    $invalidAnswerWrapper.find('[name="'+$(this).attr('name')+'"]')
+                        .val($(this).val());
+                });
             }
         });
 
