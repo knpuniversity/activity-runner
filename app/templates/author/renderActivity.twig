@@ -1,14 +1,96 @@
 {% extends 'author/layout.twig' %}
 
 {% block body %}
-    {{ challenge.question }}
 
-    {% for file in fileBuilder.allFiles %}
-        <div>
-            <h3>{{ file.filename }}</h3>
-            <div>
-                {{ file.contents }}
-            </div>
+    <div class="js-file-challenge-wrapper activity-wrapper">
+        <h3>
+            {{ challenge.question }}
+        </h3>
+
+        <div class="js-result">
         </div>
-    {% endfor %}
+        <div class="js-output">
+
+        </div>
+
+        {% for file in fileBuilder.allFiles %}
+            <div>
+                <h3>{{ file.filename }}</h3>
+                <textarea name="{{ file.filename }}"
+                          class="js-file form-control">{{ file.contents }}</textarea>
+            </div>
+        {% endfor %}
+
+        <button class="btn btn-primary js-button-grade">Grade</button>
+    </div>
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script>
+        var ChallengeApp = function($wrapper) {
+            this.initialize($wrapper);
+        };
+
+        $.extend(ChallengeApp.prototype, {
+            $wrapper: null,
+
+            initialize: function($wrapper) {
+                this.$wrapper = $wrapper;
+
+                this.$wrapper.on(
+                    'click',
+                    '.js-button-grade',
+                    $.proxy(this._handleGradeClick, this)
+                );
+            },
+
+            grade: function() {
+                var gradingData = {
+                    files: {},
+                    path: '{{ path }}'
+                };
+                this.$wrapper.find('.js-file').each(function() {
+                    gradingData.files[$(this).attr('name')] = $(this).val();
+                });
+
+                var self = this;
+                $.ajax({
+                    url: '{{ gradingUrl }}',
+                    method: 'POST',
+                    data: gradingData,
+                    success: function(data) {
+                        self.printGradingResponse(data);
+                    }
+                });
+            },
+
+            printGradingResponse: function(data) {
+                var $result = this.$wrapper.find('.js-result');
+
+                if (data.errors.validation) {
+                    $result.html(data.errors.validation);
+                } else {
+                    $result.html(data.errors.language)
+                }
+                this.$wrapper.find('.js-output').html(
+                    data.output
+                );
+            },
+
+            _handleGradeClick: function(e) {
+                e.preventDefault();
+
+                this.grade();
+            }
+        });
+
+        jQuery(document).ready(function() {
+            var $wrapper = $('.js-file-challenge-wrapper');
+
+            var challengeApp = new ChallengeApp($wrapper);
+        });
+    </script>
+{% endblock %}
+

@@ -11,10 +11,14 @@
     <link href="/css/style.css" rel="stylesheet">
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"  rel="stylesheet">
 
-    {% block javascripts %}{% endblock %}
+    {% block javascripts %}
+        <script src="/js/jquery.min.js"></script>
+    {% endblock %}
 </head>
 
 <body>
-    {% block body %}{% endblock %}
+    <div class="container">
+        {% block body %}{% endblock %}
+    </div>
 </body>
 </html>

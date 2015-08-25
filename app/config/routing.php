@@ -21,3 +21,7 @@ $app->get(
     '/author/activity',
     'KnpU\\ActivityRunner\\Controller\\AuthorController::renderActivityAction'
 )->bind('render_activity');
+$app->post(
+    '/author/activity',
+    'KnpU\\ActivityRunner\\Controller\\AuthorController::gradeAction'
+)->bind('grade_activity');
