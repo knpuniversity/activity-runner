@@ -4,3 +4,8 @@
 .activity-wrapper textarea {
     min-height: 250px;
 }
+
+.activity-wrapper iframe {
+    border: 1px solid #ccc;
+    height: 250px;
+}

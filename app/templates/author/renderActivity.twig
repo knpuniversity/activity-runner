@@ -21,10 +21,8 @@
                 {% endfor %}
             </div>
             <div class="col-xs-4">
-                <h4>Output</h4>
-                <div class="js-output">
-
-                </div>
+                <h3>Output</h3>
+                <iframe src="about:blank" frameborder="0" class="js-output"></iframe>
             </div>
         </div>
 
@@ -114,9 +112,8 @@
                     }
                 }
 
-                this.$wrapper.find('.js-output').html(
-                    data.output
-                );
+                var $iframe = this.$wrapper.find('.js-output');
+                $iframe.contents().find('body').html(data.output);
             },
 
             _handleGradeClick: function(e) {
