@@ -7,6 +7,7 @@ use KnpU\ActivityRunner\Activity\CodingChallengeInterface;
 use KnpU\ActivityRunner\ActivityRunner;
 use Silex\Application;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,6 +57,8 @@ class AuthorController
             'path' => $path,
             'gradingUrl' => $app['url_generator']->generate('grade_activity'),
             'correctAnswer' => $correctAnswer,
+            'activityUrl' => $app['url_generator']->generate('render_activity'),
+            'otherFiles' => $this->findOtherFiles($path)
         ));
 
         return new Response($html);
@@ -182,5 +185,27 @@ class AuthorController
         }
 
         return $challenge;
+    }
+
+    private function findOtherFiles($path)
+    {
+        $rootDir = $this->findRootMetadataDirectory($path);
+
+        $finder = new Finder();
+        $finder->in($rootDir)
+            ->name('*.php');
+        $files = array();
+        foreach ($finder as $matchedFile) {
+            /** @var SplFileInfo $matchedFile */
+
+            $filePath = $matchedFile->getPathname();
+            $relativePath = $relativePath = str_replace($rootDir.'/', '', $filePath);
+            $files[] = array(
+                'fullPath' => $filePath,
+                'shortPath' => $relativePath,
+            );
+        }
+
+        return $files;
     }
 }

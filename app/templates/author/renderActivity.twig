@@ -3,6 +3,17 @@
 {% block body %}
 
     <div class="js-file-challenge-wrapper activity-wrapper">
+        <div class="pull-right">
+            <button class="btn btn-xs btn-link js-show-file-list">Change File</button>
+            <ul class="js-file-list" style="display: none;">
+                {% for file in otherFiles %}
+                    <li>
+                        <a href="{{ activityUrl }}?path={{ file.fullPath }}">{{ file.shortPath }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
         <h3>
             {{ challenge.question }}
         </h3>
@@ -99,6 +110,12 @@
                     '.nav-tabs a',
                     $.proxy(this._handleFileTabClick, this)
                 );
+
+                this.$wrapper.on(
+                    'click',
+                    '.js-show-file-list',
+                    $.proxy(this._handleShowFileListClick, this)
+                );
             },
 
             grade: function() {
@@ -172,6 +189,12 @@
                 var $tab = $(e.currentTarget);
                 $tab.tab('show');
             },
+
+            _handleShowFileListClick: function(e) {
+                e.preventDefault();
+
+                this.$wrapper.find('.js-file-list').slideToggle();
+            }
         });
 
         jQuery(document).ready(function() {
