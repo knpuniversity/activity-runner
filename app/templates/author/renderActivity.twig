@@ -9,17 +9,38 @@
 
         <div class="js-result">
         </div>
-        <div class="js-output">
 
+        <div class="row">
+            <div class="col-xs-8">
+                {% for file in fileBuilder.allFiles %}
+                    <div>
+                        <h3>{{ file.filename }}</h3>
+                        <textarea name="{{ file.filename }}"
+                                  class="js-file form-control">{{ file.contents }}</textarea>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="col-xs-4">
+                <h4>Output</h4>
+                <div class="js-output">
+
+                </div>
+            </div>
         </div>
 
-        {% for file in fileBuilder.allFiles %}
-            <div>
-                <h3>{{ file.filename }}</h3>
-                <textarea name="{{ file.filename }}"
-                          class="js-file form-control">{{ file.contents }}</textarea>
+        <div>
+            <h4>Correct Answer</h4>
+            <a href="#" class="js-toggle-correct-answer">Toggle Correct Answer</a>
+            <div class="js-correct-answer-hidden" style="display: none;">
+                {% for file in correctAnswer.files %}
+                    <div>
+                        <h3>{{ file.filename }}</h3>
+                        <textarea name="{{ file.filename }}"
+                                  class="form-control">{{ file.contents }}</textarea>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
 
         <button class="btn btn-primary js-button-grade">Grade</button>
     </div>
@@ -43,6 +64,12 @@
                     'click',
                     '.js-button-grade',
                     $.proxy(this._handleGradeClick, this)
+                );
+
+                this.$wrapper.on(
+                    'click',
+                    '.js-toggle-correct-answer',
+                    $.proxy(this._handleToggleCorrectClick, this)
                 );
             },
 
@@ -83,6 +110,12 @@
                 e.preventDefault();
 
                 this.grade();
+            },
+
+            _handleToggleCorrectClick: function(e) {
+                e.preventDefault();
+
+                this.$wrapper.find('.js-correct-answer-hidden').toggle();
             }
         });
 

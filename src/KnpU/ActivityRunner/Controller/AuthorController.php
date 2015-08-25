@@ -47,12 +47,15 @@ class AuthorController
         $challenge = $this->createChallengeFromPath($path);
 
         $fileBuilder = $challenge->getFileBuilder();
+        $correctAnswer = Activity\CodingChallenge\CorrectAnswer::createFromFileBuilder($fileBuilder);
+        $challenge->configureCorrectAnswer($correctAnswer);
 
         $html = $this->getTwig($app)->render('author/renderActivity.twig', array(
             'challenge' => $challenge,
             'fileBuilder' => $fileBuilder,
             'path' => $path,
-            'gradingUrl' => $app['url_generator']->generate('grade_activity')
+            'gradingUrl' => $app['url_generator']->generate('grade_activity'),
+            'correctAnswer' => $correctAnswer,
         ));
 
         return new Response($html);
