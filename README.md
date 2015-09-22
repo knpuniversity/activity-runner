@@ -5,47 +5,24 @@ KnpUniversity Activity Runner
 
 ## Usage
 
-You can evaluate activities straight from the command line by running the
-following command:
+Setup a web server or start the built-in web server:
 
-    $ php runner.php [-c|--config="..."] [-i|--input-format="..."] [-o|--output-format="..."] activity [file1] ... [fileN]
+```
+cd web
+php -S localhost:8000
+```
 
-For more details on the specific arguments please refer to the command help by
-running the following:
+Grading is done via an API. But there is also a web interface to help grade and
+create activities:
 
-    $ php runner.php --help
+## Authoring Tool
 
-## Installation
+Tp help create challenges, go to the authoring tool:
 
-There are 2 ways to install. The first method creates a new standalone project
-and the second one adds it your own project as a library. Composer is used for
-both methods.
+    http://localhost:8000/author
 
-### New project
-
-Use the `create-project` command of composer:
-
-    $ php composer.phar create-project knpuniversity/activity-runner my/path 0.1.0
-
-Ensure that `app/cache`, `app/logs` **and** `app/courses` directories exist and are writable.
-If you're unsure on how to do that, consult `Setting up Permissions` section of [Symfony2 documentation](http://symfony.com/doc/2.0/book/installation.html)
-
-### Inclusion as a library
-
-Simply add Activity Runner in your `composer.json`:
-
-    {
-        "require": {
-            "knpuniversity/activty-runner": "~0.1"
-        }
-    }
-
-Then simply run the following command:
-
-    $ php composer.phar update knpuniversity/activity-runner
-
-Composer will then install the library to your project's vendor/knpuniversity
-directory.
+Here, enter the full path to a challenge class filename on your filesystem. The
+next page will allow you to play with the challenge and test it.
 
 ## Contributing
 
