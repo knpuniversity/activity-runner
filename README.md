@@ -17,7 +17,7 @@ create activities:
 
 ## Authoring Tool
 
-Tp help create challenges, go to the authoring tool:
+To help create challenges, go to the authoring tool:
 
     http://localhost:8000/author
 
