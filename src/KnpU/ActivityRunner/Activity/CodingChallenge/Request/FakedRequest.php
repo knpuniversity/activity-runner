@@ -16,6 +16,8 @@ class FakedRequest
 
     private $server = array();
 
+    private $headers = array();
+
     public function __construct($url, $method)
     {
         $this->uri = $url;
@@ -34,7 +36,7 @@ class FakedRequest
 
     public function addHeader($name, $val)
     {
-        $this->addServerVariable('HTTP_'.$name, $val);
+        $this->headers[$name] = $val;
     }
 
     /**
@@ -44,7 +46,7 @@ class FakedRequest
      */
     public function createRequest()
     {
-        return Request::create(
+        $request = Request::create(
             $this->uri,
             $this->method,
             $this->postData,
@@ -53,5 +55,9 @@ class FakedRequest
             $this->server, // server
             null // content
         );
+
+        $request->headers->add($this->headers);
+
+        return $request;
     }
 }
