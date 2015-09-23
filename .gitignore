@@ -2,4 +2,5 @@
 phpunit.xml
 /app/config/parameters.php
 /app/courses
-/app/logs
+/app/logs/*
+!app/logs/.gitkeep
