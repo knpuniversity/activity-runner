@@ -6,7 +6,7 @@
 use Silex\Application;
 
 if (!isset($app)) {
-    throw new \LogicException('The `$app` varialbe is not set.');
+    throw new \LogicException('The `$app` variable is not set.');
 }
 
 if (!$app instanceof Application) {
