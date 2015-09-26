@@ -15,7 +15,7 @@
     ],
     "require": {
         "doctrine/collections": "~1.1",
-        "phpunit/phpunit": "~3.7.21",
+        "phpunit/phpunit": "~4.5",
         "symfony/console": "~2.2",
         "symfony/config": "~2.2",
         "symfony/css-selector": "~2.2",
