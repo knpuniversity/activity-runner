@@ -23,15 +23,21 @@ class FileBuilder
      * is executed, but this return value will be the twig template that's rendered.
      *
      * @param $entryPointFilename
+     *
+     * @return $this
      */
     public function setEntryPointFilename($entryPointFilename)
     {
         $this->entryPointFilename = $entryPointFilename;
+
+        return $this;
     }
 
     /**
      * @param string $filename  The "local" filename - e.g. index.php
      * @param string $path      The full filesystem path to the file - /var/www/files/index.php
+     *
+     * @return $this
      */
     public function addFile($filename, $path)
     {
@@ -39,6 +45,8 @@ class FileBuilder
         $this->files[$filename] = null;
         // record where the file *should* be on the filesystem, in case we want to read it
         $this->fileSourcePaths[$filename] = $path;
+
+        return $this;
     }
 
     /**
@@ -46,6 +54,8 @@ class FileBuilder
      *
      * @param string $filename
      * @param string $contents
+     *
+     * @return $this
      */
     public function addFileContents($filename, $contents)
     {
@@ -53,6 +63,8 @@ class FileBuilder
         $file = new File($filename, $contents, $type);
 
         $this->files[$filename] = $file;
+
+        return $this;
     }
 
     public function getFileObject($filename)
@@ -100,6 +112,11 @@ class FileBuilder
         return $this->files;
     }
 
+    /**
+     * @param string $filename
+     *
+     * @return $this
+     */
     private function initializeFileObject($filename)
     {
         if ($this->files[$filename] === null) {
@@ -109,5 +126,7 @@ class FileBuilder
                 file_get_contents($this->fileSourcePaths[$filename])
             );
         }
+
+        return $this;
     }
 }
