@@ -28,7 +28,7 @@
         "silex/silex": "~1.0",
         "nikic/php-parser": "~0.9",
         "doctrine/annotations": "~1.1",
-        "monolog/monolog": "~1.6.0",
+        "monolog/monolog": "~1.6",
         "symfony/property-access": "^2.7"
     },
     "autoload": {
