@@ -76,8 +76,9 @@ class ActivityRunner
         $executionResult = $codeExecutor->executePhpProcess();
 
         $result = new Result($activity);
+        // clean things up just in case - but the worker should take care of this
         $result->setLanguageError(
-            $this->cleanError(
+            self::cleanError(
                 $executionResult->getLanguageError(),
                 $executionResult->getCodeDirectory()
             )
@@ -105,9 +106,10 @@ class ActivityRunner
      * but we really want to just show "index.php"
      *
      * @param string $output
+     * @param string $codeDirectory
      * @return string
      */
-    private function cleanError($output, $codeDirectory)
+    public static function cleanError($output, $codeDirectory)
     {
         $output = str_replace($codeDirectory.'/', '', $output);
         $output = str_replace($codeDirectory, '', $output);

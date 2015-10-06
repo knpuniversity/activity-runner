@@ -5,7 +5,9 @@ namespace KnpU\ActivityRunner\Worker;
 use KnpU\ActivityRunner\Activity;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
 use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
+use KnpU\ActivityRunner\ActivityRunner;
 use Symfony\Component\Debug\Debug;
+use Symfony\Component\Debug\Exception\ContextErrorException;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -45,7 +47,9 @@ class PhpWorker implements WorkerInterface
         ob_end_clean();
 
         $result->setOutput($contents);
-        $result->setLanguageError($languageError);
+        $result->setLanguageError(
+            ActivityRunner::cleanError($languageError, $rootDir)
+        );
         $result->setDeclaredVariables(get_defined_vars());
     }
 
