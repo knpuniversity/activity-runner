@@ -14,11 +14,14 @@ class File
 
     private $fileType;
 
-    public function __construct($filename, $contents, $fileType)
+    private $readonly;
+
+    public function __construct($filename, $contents, $fileType, $readonly = false)
     {
         $this->filename = $filename;
         $this->contents = $contents;
         $this->fileType = $fileType;
+        $this->readonly = $readonly;
     }
 
     public function getFilename()
@@ -34,6 +37,11 @@ class File
     public function getFileType()
     {
         return $this->fileType;
+    }
+
+    public function isReadonly()
+    {
+        return $this->readonly;
     }
 
     public static function determineFileType($filename)

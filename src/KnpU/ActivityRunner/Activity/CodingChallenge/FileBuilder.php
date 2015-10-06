@@ -11,10 +11,10 @@ class FileBuilder
      */
     private $files = array();
 
-    private $fileSourcePaths = array();
-
-    // 1) what are all the local filenames we know of
-    // 2) what are the contents of each
+    /**
+     * @var array with keys "path" and "readonly"
+     */
+    private $pendingFileDetails = array();
 
     /**
      * What's the filename that should be executed first
@@ -36,15 +36,19 @@ class FileBuilder
     /**
      * @param string $filename  The "local" filename - e.g. index.php
      * @param string $path      The full filesystem path to the file - /var/www/files/index.php
+     * @param bool   $readonly  Should this file be readonly?
      *
      * @return $this
      */
-    public function addFile($filename, $path)
+    public function addFile($filename, $path, $readonly = false)
     {
         // add this as a file, but don't set its contents automatically
         $this->files[$filename] = null;
         // record where the file *should* be on the filesystem, in case we want to read it
-        $this->fileSourcePaths[$filename] = $path;
+        $this->pendingFileDetails[$filename] = array(
+            'path' => $path,
+            'readonly' => $readonly
+        );
 
         return $this;
     }
@@ -54,13 +58,14 @@ class FileBuilder
      *
      * @param string $filename
      * @param string $contents
+     * @param bool   $readonly
      *
      * @return $this
      */
-    public function addFileContents($filename, $contents)
+    public function addFileContents($filename, $contents, $readonly = false)
     {
         $type = File::determineFileType($filename);
-        $file = new File($filename, $contents, $type);
+        $file = new File($filename, $contents, $type, $readonly);
 
         $this->files[$filename] = $file;
 
@@ -121,9 +126,11 @@ class FileBuilder
     {
         if ($this->files[$filename] === null) {
             // initialize the contents!
+            $path = $this->pendingFileDetails[$filename]['path'];
             $this->addFileContents(
                 $filename,
-                file_get_contents($this->fileSourcePaths[$filename])
+                file_get_contents($path),
+                $this->pendingFileDetails[$filename]['readonly']
             );
         }
 
