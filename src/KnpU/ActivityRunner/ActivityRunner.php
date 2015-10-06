@@ -54,7 +54,6 @@ class ActivityRunner
         // 3) call grade() and use results  (different for contexts)
 
         $filesToWrite = $this->getFilesToCreate($activity);
-        $inlineWorkerSource = $worker->getInlineCodeToExecute($this->twig, $activity);
         $initialExecutionResult = new CodingExecutionResult($filesToWrite);
 
         // serialize this, so we can easily fetch the input files
@@ -65,10 +64,11 @@ class ActivityRunner
 
         // write our executor.php and execute that
         $executionCode = $this->twig->render('code_executor.php.twig', array(
-            'workerSource'  => $inlineWorkerSource,
+            'workerClass'  => get_class($worker),
             'projectPath' => $this->projectRootDir,
             'challengeFilename' => 'ChallengeClass.php',
             'challengeClassName' => $activity->getChallengeClassName(),
+            'entryPointFilename' => $challenge->getFileBuilder()->getEntryPointFilename()
         ));
         $filesToWrite['execution.php'] = $executionCode;
 

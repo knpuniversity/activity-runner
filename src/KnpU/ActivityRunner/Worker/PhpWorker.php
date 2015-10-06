@@ -2,15 +2,10 @@
 
 namespace KnpU\ActivityRunner\Worker;
 
-use Doctrine\Common\Collections\Collection;
 use KnpU\ActivityRunner\Activity;
-use KnpU\ActivityRunner\Result;
-use KnpU\ActivityRunner\Worker\Executor\CodeExecutor;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\Exception\RuntimeException;
-use Symfony\Component\Process\PhpExecutableFinder;
-use Symfony\Component\Process\Process;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CodingContext;
+use KnpU\ActivityRunner\Activity\CodingChallenge\CodingExecutionResult;
+use Symfony\Component\Debug\Debug;
 
 /**
  * @author Kristen Gilden <kristen.gilden@knplabs.com>
@@ -18,27 +13,40 @@ use Symfony\Component\Process\Process;
 class PhpWorker implements WorkerInterface
 {
     /**
-     * @var string
-     */
-    protected $prefix = 'knpu_php_';
-
-    /**
-     * The maximum amount of time the PHP process can take to execute.
+     * Execute the code and modify the CodingExecutionResult
      *
-     * @var integer
+     * @param string $rootDir Where all the files have been placed
+     * @param string $entryPointFilename
+     * @param CodingContext $context
+     * @param CodingExecutionResult $result
      */
-    protected $timeout = 10;
-
-    public function getInlineCodeToExecute(\Twig_Environment $twig, Activity $activity)
+    public function executeCode($rootDir, $entryPointFilename, CodingContext $context, CodingExecutionResult $result)
     {
-        $challenge = $activity->getChallengeObject();
+        // makes all notices/warning into exceptions, which is good!
+        Debug::enable();
 
-        return $twig->render(
-            'php_worker.php.twig',
-            array(
-                'entryPointFilename' => $challenge->getFileBuilder()->getEntryPointFilename()
-            )
-        );
+        $languageError = null;
+
+        extract($context->getVariables());
+        ob_start();
+        try {
+            require $rootDir.'/'.$entryPointFilename;
+        } catch (\ErrorException $e) {
+            $message = sprintf(
+                // matches normal syntax error phrasing
+                '%s in %s on line %s',
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            );
+            $languageError = $message;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $result->setOutput($contents);
+        $result->setLanguageError($languageError);
+        $result->setDeclaredVariables(get_defined_vars());
     }
 
     /**

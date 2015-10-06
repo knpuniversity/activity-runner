@@ -9,10 +9,6 @@ use KnpU\ActivityRunner\Worker\Executor\Grader;
 use Symfony\Component\Debug\Debug;
 
 require '{{ projectPath }}/vendor/autoload.php';
-require '{{ projectPath }}/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
-
-// makes all notices/warning into exceptions, which is good!
-Debug::enable();
 
 require __DIR__.'/{{ challengeFilename }}';
 
@@ -32,7 +28,15 @@ $codingExecutionResult = unserialize(file_get_contents(__DIR__.'/executionResult
         * calling $grader->grade($result, $challenge);
         * json_encode what you get back
 #}
-{{ workerSource|raw }}
+
+{# workers cannot have a constructor - they must stay simple #}
+$worker = new {{ workerClass }}();
+$worker->executeCode(
+    __DIR__,
+    '{{ entryPointFilename }}',
+    $context,
+    $codingExecutionResult
+);
 
 // only grade if there wasn't a language error
 if (!$codingExecutionResult->getLanguageError()) {
