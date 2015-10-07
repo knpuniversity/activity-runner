@@ -56,7 +56,7 @@ class File
                 return File::TYPE_TWIG;
             case 'json':
                 return File::TYPE_JSON;
-            case 'gherkin':
+            case 'feature':
                 return File::TYPE_GHERKIN;
             default:
                 throw new \InvalidArgumentException(sprintf('Unsupported type for file "%s"', $filename));
