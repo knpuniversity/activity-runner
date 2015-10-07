@@ -48,20 +48,12 @@ $app['php_parser'] = $app->share(function () {
 
 $app['worker_bag'] = $app->share(function ($app) {
     return new KnpU\ActivityRunner\Worker\WorkerBag(array(
-        $app['worker.twig'],
-        $app['worker.php']
+        new KnpU\ActivityRunner\Worker\TwigWorker(),
+        new KnpU\ActivityRunner\Worker\PhpWorker(),
+        new KnpU\ActivityRunner\Worker\GherkinWorker()
     ));
 });
 
-$app['worker.php'] = $app->share(function ($app) {
-    $worker = new KnpU\ActivityRunner\Worker\PhpWorker();
-
-    return $worker;
-});
-
-$app['worker.twig'] = $app->share(function ($app) {
-    return new KnpU\ActivityRunner\Worker\TwigWorker();
-});
 $app['twig'] = $app->share(function() {
     $loader = new \Twig_Loader_Filesystem(array(
         __DIR__.'/../templates'

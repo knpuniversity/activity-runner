@@ -15,6 +15,7 @@ interface CodingChallengeInterface extends ChallengeInterface
 {
     const EXECUTION_MODE_PHP_NORMAL     = 'php_normal';
     const EXECUTION_MODE_TWIG_NORMAL    = 'twig_normal';
+    const EXECUTION_MODE_GHERKIN        = 'gherkin';
 
     /**
      * Add files and set the entry point
