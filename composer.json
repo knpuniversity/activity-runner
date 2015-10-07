@@ -29,8 +29,7 @@
         "nikic/php-parser": "~0.9",
         "doctrine/annotations": "~1.1",
         "monolog/monolog": "~1.6",
-        "symfony/property-access": "^2.7",
-        "behat/gherkin": "^4.4"
+        "symfony/property-access": "^2.7"
     },
     "autoload": {
         "psr-0": {
