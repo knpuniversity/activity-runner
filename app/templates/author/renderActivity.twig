@@ -26,7 +26,12 @@
                 <ul class="nav nav-tabs nav-tabs-dark">
                     {% for file in fileBuilder.allFiles %}
                         <li role="presentation" class="{{ loop.first ? 'active' }}">
-                            <a href="#editor-{{ loop.index }}">{{ file.filename }}</a>
+                            <a href="#editor-{{ loop.index }}">
+                                {% if file.readonly %}
+                                    <span title="This file is in the read only mode">&#128274;</span>
+                                {% endif %}
+                                {{ file.filename }}
+                            </a>
                         </li>
                     {% endfor %}
                 </ul>
@@ -38,7 +43,9 @@
                              id="editor-{{ loop.index }}">
 
                             <textarea name="{{ file.filename }}"
-                                  class="js-file form-control">{{ file.contents }}</textarea>
+                                      class="js-file form-control"
+                                      {% if file.readonly %}readonly{% endif %}
+                            >{{ file.contents }}</textarea>
                         </div>
                     {% endfor %}
                 </div>
